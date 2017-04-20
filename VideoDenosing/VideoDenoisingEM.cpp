@@ -17,6 +17,8 @@ int VideoDenoisingME::processing(vector<Mat>&dstFrames, string videoName,string 
 	width = tempFrame.cols;
 	height = tempFrame.rows;
 
+
+
 	if (tempFrame.channels() == 1){
 		singalChannelHandle(dstFrames);
 	}
@@ -57,7 +59,7 @@ void VideoDenoisingME::singalChannelHandle(vector<Mat>&dstFrames){
 	}
 
 	cout << "denoising..." << endl;
-	videoDenoising(gFrames, dstFrames);
+	parallel_for_(Range(0, width), NLM(H, K, 2 * S + 1, gFrames, dstFrames));
 }
 
 void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
@@ -72,7 +74,7 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 
 		if (tempFrame.type() != CV_64FC1){
 			tempFrame.convertTo(tempFrame, CV_64FC1);
-			tempFrame = tempFrame * 1.0 / 255;
+			//tempFrame = tempFrame * 1.0 / 255;
 		}
 
 		vector<Mat>singleFrameRBG;
@@ -81,7 +83,8 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 		bFrames.push_back(singleFrameRBG[1]);
 		gFrames.push_back(singleFrameRBG[2]);
 	}
-	int n=0;
+	
+
 	while (1){
 		vector<Mat>rOutFrames, bOutFrames, gOutFrames;
 		//cout <<"frame: "<< n++ << endl;
@@ -90,42 +93,49 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 		imwrite("ori.jpg", tempFrame);
 
 		double start, end;
-		start = GetTickCount();
-		Mat dst;
-		fastNlMeansDenoisingColored(tempFrame(Rect(500, 50, 150, 150)), dst, 3, 3, 11, 21);
-		end = GetTickCount();
-		cout << end - start << endl;
+		//start = GetTickCount();
+		//Mat dst;
+		//fastNlMeansDenoisingColored(tempFrame(Rect(300, 50, 100, 50)), dst, 3, 3, 11, 21);
+		//end = GetTickCount();
+		//cout << end - start << endl;
 
-		imshow("ff", tempFrame);
-		imshow("df", dst);
-		waitKey();
+		//imshow("ff", tempFrame);
+		//imshow("df", dst);
+		//waitKey();
 
 		if (tempFrame.empty())break;
-		imshow("ori", tempFrame(Rect(500, 50, 150, 150)));
+		imshow("ori", tempFrame);
 		if (tempFrame.type() != CV_64FC1){
 			tempFrame.convertTo(tempFrame, CV_64FC1);
-			tempFrame = tempFrame * 1.0 / 255;
+			//tempFrame = tempFrame * 1.0 / 255;
 		}
 
-		start = GetTickCount();
+		
 
 		vector<Mat>singleFrameRBG;
 		split(tempFrame,singleFrameRBG);
+
 		rFrames.erase(rFrames.begin());
 		rFrames.push_back(singleFrameRBG[0]);
+		//////////////////////////////////////////////////////////////
+		start = GetTickCount();
 		videoDenoising(rFrames, rOutFrames);
-
-
+		//parallel_for_(Range(50, 100), NLM(H, K, 2 * S + 1, rFrames, rOutFrames));
+		end = GetTickCount();
+		cout << end - start << endl;
+		//////////////////////////////////////////////////////////////
 
 		bFrames.erase(bFrames.begin());
 		bFrames.push_back(singleFrameRBG[1]);
 		videoDenoising(bFrames, bOutFrames);
+		//parallel_for_(Range(50,100), NLM(H, K, 2 * S + 1, bFrames, bOutFrames));
 
 
 
 		gFrames.erase(gFrames.begin());
 		gFrames.push_back(singleFrameRBG[2]);
 		videoDenoising(gFrames, gOutFrames);
+		//parallel_for_(Range(50, 100), NLM(H, K, 2 * S + 1, gFrames, gOutFrames));
 
 
 
@@ -134,12 +144,12 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 		singleOutFrameRBG.push_back(rOutFrames[H]);
 		singleOutFrameRBG.push_back(bOutFrames[H]);
 		singleOutFrameRBG.push_back(gOutFrames[H]);
-		merge(singleFrameRBG, tempFrame);
-
-		end = GetTickCount();
-		cout << end - start << endl;
+		merge(singleOutFrameRBG, tempFrame);
+		
+		
 		imwrite("out.jpg", tempFrame);
-		imshow("frame", tempFrame(Rect(500, 50, 150, 150)));
+		tempFrame = tempFrame*1.0 / 255.0;
+		imshow("frame", tempFrame);
 		waitKey();
 		dstFrames.push_back(tempFrame);
 
@@ -162,16 +172,8 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 }
 
 void VideoDenoisingME::videoDenoising(vector<Mat>framesSrc, vector<Mat>&framesOut){
-	//תdouble
-
-	/*cout << "change type..." << endl;
-	if (framesSrc[0].type() != CV_64FC1){
-		for (int i = 0; i < framesSrc.size(); i++){
-			framesSrc[i].convertTo(framesSrc[i], CV_64FC1);
-			framesSrc[i] = framesSrc[i] * 1.0 / 255;
-		}
-	}*/
-	NLM mNLM(H, K, 2 * S + 1, framesSrc);
+	
+	NLM mNLM(H, K, 2 * S + 1, framesSrc, framesOut);
 
 	cout << "copy..." << endl;
 	if (framesOut.empty()){
@@ -186,10 +188,14 @@ void VideoDenoisingME::videoDenoising(vector<Mat>framesSrc, vector<Mat>&framesOu
 	cout << "start NLM..." << endl;
 	double start = GetTickCount();
 	for (int f = H; f < framesSrc.size() - H; f++){
-		for (int i = 500; i < 650; i++){
-			//cout << i << endl;
-			for (int j = 50; j < 200; j++){
-				framesOut[f].at<double>(j, i) = mNLM.NLM_Estimate(Point3i(i, j, f));
+		double sigma_t=mNLM.getSigma_t(framesOut[f], framesOut[f+1]);
+		//mNLM.setSigma_t(sigma_t);
+//#pragma omp parallel for 
+		for (int x = 100; x < 200; x++){
+			//cout << x << endl;
+//#pragma omp parallel for
+			for (int y = 50; y < 150; y++){
+				framesOut[f].at<double>(y, x) = mNLM.NLM_Estimate(Point3i(x, y, f),sigma_t);
 				//double a=framesSrc[f].at<double>(j, i);
 				//double b = framesOut[f].at<double>(j, i);
 				//cout << b - a << endl;
@@ -200,6 +206,6 @@ void VideoDenoisingME::videoDenoising(vector<Mat>framesSrc, vector<Mat>&framesOu
 	}
 	double end = GetTickCount();
 	cout << end - start << endl;
-	waitKey();
+	//waitKey();
 	cout << "endNLM" << endl;
 }

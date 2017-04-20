@@ -36,13 +36,15 @@ private:
 public:
 	AKNN(const Mat img, const Mat imgSrc);
 	vector<NeighborPatch> getV(Point2i pPatch,int K,int lenPatch);
+
 private:
 	void initation();
-	void progagation(Point2i v, int iter);
-	Point2i randomSearch(int i);
+	void progagation(int iter,int k);
+	void randomSearch(int i);
 	void handleQueue(NeighborPatch mNeighborPatch);
 	void operation();
 	double calculateDistance(Point2i p, Mat patch);
 	double calculateDistance(Mat q, Mat p);
 	Point2d generateNormal2dVector();
+
 }; 
