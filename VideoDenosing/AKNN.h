@@ -11,6 +11,8 @@ using namespace cv;
 # define ALPHA   0.5
 # define NUMMOD  1000
 
+
+
 struct NeighborPatch{
 	Point2i p;
 	double distance;
@@ -19,32 +21,41 @@ struct NeighborPatch{
 	}
 };
 
+typedef vector<NeighborPatch> KNN;
+typedef KNN ** ImgKNN;
 
 class AKNN{
 private:
-	Mat img;                         //img in certain flame
-	Mat imgSrc;                      //img with original patch
-	Mat patch;                       //source patch
-	Mat patchSurroungding[4];        //
+	const Mat &imgDst;                         //img in certain flame
+	const Mat &imgSrc;                      //img with original patch
+
 	int K;                           //K nearest neighbors
 	int S;                           //half edge of searching patch
+
 	double sigma;
-	int nImgRows;
-	int nImgCols;
-	Point2i pPatch;
-	vector<NeighborPatch> neighbors;
+
+	int nSrcRows;
+	int nSrcCols;
+	int nDstRows;
+	int nDstCols;
+
+	Point2i **NNF;
+	double **offset;
+	ImgKNN &KNNF;
+
 public:
-	AKNN(const Mat img, const Mat imgSrc);
-	vector<NeighborPatch> getV(Point2i pPatch,int K,int lenPatch);
+	AKNN(const Mat &dst, const Mat &src, ImgKNN &_knnf);
+	~AKNN();
+	int getV(int K, int lenPatch);
 
 private:
 	void initation();
-	void progagation(int iter,int k);
-	void randomSearch(int i);
-	void handleQueue(NeighborPatch mNeighborPatch);
+	void progagation(Point2i patch, int odd);
+	void randomSearch(Point2i pSrc, Point2i nnf);
+	void handleQueue(KNN &knn, NeighborPatch);
 	void operation();
-	double calculateDistance(Point2i p, Mat patch);
+	double calculateDistance(Point2i pDst, Point2i pSrc);
 	double calculateDistance(Mat q, Mat p);
 	Point2d generateNormal2dVector();
-
+	int getMinIndex(double a, double b, double c);
 }; 

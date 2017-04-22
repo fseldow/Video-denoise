@@ -8,6 +8,7 @@
 #include <windows.h> 
 
 #include"NLM.h"
+#include"AKNN.h"
 
 class VideoDenoisingME{
 	string videoName;

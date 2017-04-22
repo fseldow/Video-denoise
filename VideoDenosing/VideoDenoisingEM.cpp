@@ -90,7 +90,7 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 		//cout <<"frame: "<< n++ << endl;
 		Mat tempFrame;
 		capture >> tempFrame;
-		imwrite("ori.jpg", tempFrame);
+
 
 		double start, end;
 		//start = GetTickCount();
@@ -104,7 +104,7 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 		//waitKey();
 
 		if (tempFrame.empty())break;
-		imshow("ori", tempFrame);
+
 		if (tempFrame.type() != CV_64FC1){
 			tempFrame.convertTo(tempFrame, CV_64FC1);
 			//tempFrame = tempFrame * 1.0 / 255;
@@ -117,15 +117,17 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 
 		rFrames.erase(rFrames.begin());
 		rFrames.push_back(singleFrameRBG[0]);
-		//////////////////////////////////////////////////////////////
-		start = GetTickCount();
-		videoDenoising(rFrames, rOutFrames);
-		//parallel_for_(Range(50, 100), NLM(H, K, 2 * S + 1, rFrames, rOutFrames));
-		end = GetTickCount();
-		cout << end - start << endl;
-		//////////////////////////////////////////////////////////////
 
-		bFrames.erase(bFrames.begin());
+		imshow("rSrc", rFrames[H](Rect(700,50,100,100))*1.0/255);
+		//cout << rFrames[H](Rect(700, 50, 100, 100)) << endl;
+		//waitKey();
+		videoDenoising(rFrames, rOutFrames);
+		imshow("rOut", rOutFrames[H](Rect(700, 50, 100, 100)) * 1.0 / 255);
+		waitKey();
+		//parallel_for_(Range(50, 100), NLM(H, K, 2 * S + 1, rFrames, rOutFrames));
+		
+
+		bFrames.erase(bFrames.begin( ));
 		bFrames.push_back(singleFrameRBG[1]);
 		videoDenoising(bFrames, bOutFrames);
 		//parallel_for_(Range(50,100), NLM(H, K, 2 * S + 1, bFrames, bOutFrames));
@@ -175,35 +177,44 @@ void VideoDenoisingME::videoDenoising(vector<Mat>framesSrc, vector<Mat>&framesOu
 	
 	NLM mNLM(H, K, 2 * S + 1, framesSrc, framesOut);
 
-	cout << "copy..." << endl;
-	if (framesOut.empty()){
-		//¿½±´
-		for (int f = 0; f < framesSrc.size() ; f++){
-			Mat temp;
-			framesSrc[f].copyTo(temp);
-			framesOut.push_back(temp);
-		}
-	}
+
+
+
+
 
 	cout << "start NLM..." << endl;
 	double start = GetTickCount();
 	for (int f = H; f < framesSrc.size() - H; f++){
-		double sigma_t=mNLM.getSigma_t(framesOut[f], framesOut[f+1]);
-		//mNLM.setSigma_t(sigma_t);
+		////////////////////////////////////////////////////////////
+		//get all neighbors patches
+		////////////////////////////////////////////////////////////
+		vector<ImgKNN> nearestNeighbors(framesSrc.size());
 //#pragma omp parallel for 
-		for (int x = 100; x < 200; x++){
-			//cout << x << endl;
-//#pragma omp parallel for
+
+		for (int n_frame = f - H; n_frame <= f + H; n_frame++){
+			cout << "f: " << n_frame << endl;
+			double start = GetTickCount();
+			ImgKNN result;
+			AKNN mAKNN(framesSrc[n_frame], framesSrc[f], result);
+			mAKNN.getV(K, 2 * S + 1);
+			nearestNeighbors[n_frame] = result;
+			double end = GetTickCount();
+			cout << "AKNN use time : " << end - start << endl;
+		}
+
+
+		double end = GetTickCount();
+		cout <<"Total AKNN use time : "<< end - start << endl;
+		double sigma_t = mNLM.getSigma_t(framesSrc[f], framesSrc[f + 1]);
+#pragma omp parallel for 
+		for (int x = 700; x < 800; x++){
 			for (int y = 50; y < 150; y++){
-				framesOut[f].at<double>(y, x) = mNLM.NLM_Estimate(Point3i(x, y, f),sigma_t);
-				//double a=framesSrc[f].at<double>(j, i);
-				//double b = framesOut[f].at<double>(j, i);
-				//cout << b - a << endl;
-				//cout << framesOut[f].at<double>(i, j) << " " << framesSrc[f].at<double>(i, j) << endl;
-				//cout << "loc: " << H << " " << i << " " << j << endl;
+				framesOut[f].at<double>(y, x) = mNLM.NLM_Estimate(Point3i(x, y, f), sigma_t, nearestNeighbors);
 			}
 		}
+		nearestNeighbors.clear();
 	}
+	start = GetTickCount();
 	double end = GetTickCount();
 	cout << end - start << endl;
 	//waitKey();

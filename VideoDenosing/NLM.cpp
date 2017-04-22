@@ -1,17 +1,22 @@
 #include"NLM.h"
 #include <windows.h> 
 
-NLM::NLM(int _H, int _K, int lenPatch, vector<Mat>_frames, vector<Mat>&_dst) :frames(_frames),dst(_dst){
+NLM::NLM(int _H, int _K, int lenPatch, vector<Mat>&_frames, vector<Mat>&_dst) :frames(_frames),dst(_dst){
 	this->H = _H;
 	this->K = _K;
 	this->S = (lenPatch - 1) / 2;
 	this->sigma_p = S/2.0;
 	this->gama = 0.9;
+	int w = _frames[0].cols;
+	int h = _frames[0].rows;
+	board = Rect(S + 1, S + 1, w - 2 * S - 2, h - 2 * S - 2);
+	board = Rect(700, 50, 100, 100);
 
 	double start, end;
 	start = GetTickCount();
 	if (dst.empty()){
 				//¿½±´
+//#pragma omp parallel for
 		for (int f = 0; f < frames.size() ; f++){
 			Mat temp;
 			frames[f].copyTo(temp);
@@ -31,14 +36,8 @@ void NLM::operator()(const Range& range) const{
 	for (int f = H; f < frames.size() - H; f++){
 		double sigma_t= getSigma_t(frames[f], frames[f + 1]);
 		for (int y = range.start; y < range.end; y++){
-			
 			for (int x = 300; x < 550; x++){
-			//int N = 22500;
-			//int y = 50+n/100;
-			//int x = 300+n%100;
-			//cout << " x " << x << " y " << y <<" n "<<n<< endl;
-			dst[f].at<double>(y, x) = NLM_Estimate(Point3i(x, y, f),sigma_t);
-			//cout << "finish: x " << x << " y " << y << endl;
+			//dst[f].at<double>(y, x) = NLM_Estimate(Point3i(x, y, f),sigma_t);
 			}
 		}
 	}
@@ -48,13 +47,12 @@ void NLM::operator()(const Range& range) const{
 //	sigma_t = sigma_t;
 //}
 
-double NLM::NLM_Estimate(Point3i p, double sigma_t)const{
+double NLM::NLM_Estimate(Point3i p, double sigma_t, vector<ImgKNN> vKNN)const{
 	double I=0;
 	double Z = 0;
 	for (int i = p.z - H; i <= p.z + H; i++){
-		AKNN mAKNN(frames[i], frames[p.z]);
-		
-		vector<NeighborPatch> NNF = mAKNN.getV(Point2i(p.x, p.y), K, 2*S+1);
+
+		vector<NeighborPatch> NNF=(vKNN[i])[p.x][p.y];
 		for (int j = 0; j < K; j++)
 		{
 			double Dw = weightedSSD(Point3i(NNF[j].p.x, NNF[j].p.y, i), p);
@@ -95,7 +93,7 @@ double NLM::getSigma_t(Mat src_t, Mat src_f)const{
 	double sigma_temp1,sigma_temp2,preSigma_n=0;
 	Mat alfa(Size(cols,rows),CV_64FC1);
 
-	while (abs(sigma_n-preSigma_n)>0.01){
+	while (abs(sigma_n-preSigma_n)>0.1){
 	//while (1){
 		preSigma_n = sigma_n;
 		sigma_temp1 = 0;

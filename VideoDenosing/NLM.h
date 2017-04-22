@@ -16,13 +16,14 @@ struct NLM :ParallelLoopBody{
 	int H;
 	int K;
 	int S;
-	vector<Mat>frames;
+	vector<Mat> &frames;
 	vector<Mat> &dst;
 public:
+	Rect board;
 	void operator() (const Range& range) const;
-	NLM(int H, int K, int lenPatch, vector<Mat>frames, vector<Mat> &dst);
+	NLM(int H, int K, int lenPatch, vector<Mat>&frames, vector<Mat> &dst);
 	double getSigma_t(Mat src_t, Mat src_f)const;
-	double NLM_Estimate(Point3i z, double _sigma_t)const;
+	double NLM_Estimate(Point3i z, double _sigma_t, vector<ImgKNN> NNF)const;
 	
 private:
 	double weightedSSD(Point3i p, Point3i q)const;
