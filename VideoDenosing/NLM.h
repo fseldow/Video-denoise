@@ -24,9 +24,9 @@ public:
 	NLM(int H, int K, int lenPatch, vector<Mat>&frames, vector<Mat> &dst);
 	double getSigma_t(Mat src_t, Mat src_f)const;
 	double NLM_Estimate(Point3i z, double _sigma_t, vector<ImgKNN> NNF)const;
-	
-private:
 	double weightedSSD(Point3i p, Point3i q)const;
+private:
+	
 	
 	
 	//void setSigma_t(double sigma_t)const;

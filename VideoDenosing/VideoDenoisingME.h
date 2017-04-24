@@ -10,6 +10,9 @@
 #include"NLM.h"
 #include"AKNN.h"
 
+using namespace std;
+using namespace cv;
+
 class VideoDenoisingME{
 	string videoName;
 	vector<Mat>frames;

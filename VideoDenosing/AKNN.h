@@ -26,7 +26,7 @@ typedef KNN ** ImgKNN;
 
 class AKNN{
 private:
-	const Mat &imgDst;                         //img in certain flame
+	Mat imgDst;                         //img in certain flame
 	const Mat &imgSrc;                      //img with original patch
 
 	int K;                           //K nearest neighbors
@@ -44,9 +44,10 @@ private:
 	ImgKNN &KNNF;
 
 public:
-	AKNN(const Mat &dst, const Mat &src, ImgKNN &_knnf);
+	AKNN( const Mat &src, ImgKNN &_knnf);
 	~AKNN();
 	int getV(int K, int lenPatch);
+	void setDst(Mat &dst);
 
 private:
 	void initation();

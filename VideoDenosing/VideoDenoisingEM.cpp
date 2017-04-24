@@ -118,12 +118,12 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 		rFrames.erase(rFrames.begin());
 		rFrames.push_back(singleFrameRBG[0]);
 
-		imshow("rSrc", rFrames[H](Rect(700,50,100,100))*1.0/255);
+		//imshow("rSrc", rFrames[H](Rect(700,50,100,100))*1.0/255);
 		//cout << rFrames[H](Rect(700, 50, 100, 100)) << endl;
 		//waitKey();
 		videoDenoising(rFrames, rOutFrames);
-		imshow("rOut", rOutFrames[H](Rect(700, 50, 100, 100)) * 1.0 / 255);
-		waitKey();
+		//imshow("rOut", rOutFrames[H](Rect(700, 50, 100, 100)) * 1.0 / 255);
+		//waitKey();
 		//parallel_for_(Range(50, 100), NLM(H, K, 2 * S + 1, rFrames, rOutFrames));
 		
 
@@ -175,48 +175,96 @@ void VideoDenoisingME::multiChannelHandle(vector<Mat>&dstFrames){
 
 void VideoDenoisingME::videoDenoising(vector<Mat>framesSrc, vector<Mat>&framesOut){
 	
+	if (framesSrc.size() != 2 * H + 1)return;
+	ImgKNN result;
 	NLM mNLM(H, K, 2 * S + 1, framesSrc, framesOut);
+	AKNN mAKNN(framesSrc[H], result);
+	
+	double sigma_t = mNLM.getSigma_t(framesSrc[H], framesSrc[H + 1]);
 
+	Mat Z(width, height, CV_64FC1, Scalar(0));
+	Mat I(width, height, CV_64FC1, Scalar(0));
 
+	////////////////////////////////////////////////////////////
+	//get all neighbors patches
+	////////////////////////////////////////////////////////////
 
-
-
-
-	cout << "start NLM..." << endl;
-	double start = GetTickCount();
-	for (int f = H; f < framesSrc.size() - H; f++){
-		////////////////////////////////////////////////////////////
-		//get all neighbors patches
-		////////////////////////////////////////////////////////////
-		vector<ImgKNN> nearestNeighbors(framesSrc.size());
-//#pragma omp parallel for 
-
-		for (int n_frame = f - H; n_frame <= f + H; n_frame++){
-			cout << "f: " << n_frame << endl;
-			double start = GetTickCount();
-			ImgKNN result;
-			AKNN mAKNN(framesSrc[n_frame], framesSrc[f], result);
+	for (int nFrame = 0; nFrame < 2 * H + 1; nFrame++){
+			mAKNN.setDst(framesSrc[H]);
+			double startAKNN = GetTickCount();
 			mAKNN.getV(K, 2 * S + 1);
-			nearestNeighbors[n_frame] = result;
-			double end = GetTickCount();
-			cout << "AKNN use time : " << end - start << endl;
-		}
-
-
-		double end = GetTickCount();
-		cout <<"Total AKNN use time : "<< end - start << endl;
-		double sigma_t = mNLM.getSigma_t(framesSrc[f], framesSrc[f + 1]);
-#pragma omp parallel for 
-		for (int x = 700; x < 800; x++){
-			for (int y = 50; y < 150; y++){
-				framesOut[f].at<double>(y, x) = mNLM.NLM_Estimate(Point3i(x, y, f), sigma_t, nearestNeighbors);
+			double endAKNN = GetTickCount();
+			KNN matchPatch = result[750][150];
+			cout << "AKNN completed : " << endAKNN - startAKNN << endl;
+		
+		//////////////////////////////////////////////////////////////////////////////////////
+		//start calculate every pixel via NLM
+		/////////////////////////////////////////////////////////////////////////////////////
+		double startNLM=GetTickCount();
+ 		for (int x = 700; x < 850; x++){
+			for (int y = 50; y < 200; y++){
+				KNN matchPatch = result[x][y];
+				for (int k = 0; k < K; k++){
+					
+					Point3i p = Point3i(x, y, H);
+					double Dw = mNLM.weightedSSD(Point3i(matchPatch[k].p.x, matchPatch[k].p.y, nFrame), p);
+					double temp = pow(0.9, abs(nFrame - p.z)) * exp(-(Dw / (2 * sigma_t*sigma_t)));
+					Z.at<double>(y,x) += temp;
+					I.at<double>(y, x) += framesSrc[nFrame].at<double>(matchPatch[k].p) * temp;
+				}
 			}
 		}
-		nearestNeighbors.clear();
+		double endNLM = GetTickCount();
+		cout << "NLM completed : " << endNLM - startNLM << endl;
 	}
-	start = GetTickCount();
-	double end = GetTickCount();
-	cout << end - start << endl;
+	I = I / Z;
+	I(Rect(700, 50, 150, 150)).copyTo(framesOut[H](Rect(700, 50, 150, 150)));
+	//imshow("test", I(Rect(700,50,100,100))*1.0 / 255);
 	//waitKey();
-	cout << "endNLM" << endl;
+	
+//	AKNN mAKNN(NULL, framesSrc[f], result);
+//	cout << "start NLM..." << endl;
+//	double start = GetTickCount();
+//
+//
+//	////////////////////////////////////////////////////////////
+//	//get all neighbors patches
+//	////////////////////////////////////////////////////////////
+//
+//	vector<ImgKNN> nearestNeighbors(framesSrc.size());
+//	for (int n_frame = 0; n_frame <= H*2+1; n_frame++){
+//		cout << "f: " << n_frame << endl;
+//		double start = GetTickCount();
+//		ImgKNN result;
+//		AKNN mAKNN(framesSrc[n_frame], framesSrc[f], result);
+//		mAKNN.getV(K, 2 * S + 1);
+//		nearestNeighbors[n_frame] = result;
+//		double end = GetTickCount();
+//		cout << "AKNN use time : " << end - start << endl;
+//	}
+//
+//
+//	double end = GetTickCount();
+//	cout <<"Total AKNN use time : "<< end - start << endl;
+//	double sigma_t = mNLM.getSigma_t(framesSrc[H], framesSrc[H + 1]);
+//
+//
+//	//////////////////////////////////////////////////////////////////////////////////////
+//	//start calculate every pixel via NLM
+//	/////////////////////////////////////////////////////////////////////////////////////
+//	NLM mNLM(H, K, 2 * S + 1, framesSrc, framesOut);
+//
+//#pragma omp parallel for 
+//	for (int x = 700; x < 800; x++){
+//		for (int y = 50; y < 150; y++){
+//			framesOut[H].at<double>(y, x) = mNLM.NLM_Estimate(Point3i(x, y, f), sigma_t, nearestNeighbors);
+//		}
+//	}
+//	nearestNeighbors.clear();
+//
+//	start = GetTickCount();
+//	double end = GetTickCount();
+//	cout << end - start << endl;
+//	//waitKey();
+//	cout << "endNLM" << endl;
 }

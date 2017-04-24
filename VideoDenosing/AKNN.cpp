@@ -1,15 +1,14 @@
 # include "AKNN.h"
 
-AKNN::AKNN(const Mat &dst, const Mat &src, ImgKNN &_knnf) 
-:imgDst(dst), imgSrc(src),KNNF( _knnf)
+AKNN::AKNN(const Mat &src, ImgKNN &_knnf) 
+: imgSrc(src),KNNF( _knnf)
 {
 	
-	nDstCols = dst.cols;
-	nDstRows = dst.rows;
+
 	nSrcCols = src.cols;
 	nSrcRows = src.rows;
 
-	sigma = min(nDstCols, nDstRows) / 3.0;
+	
 
 	cout << "start new" << endl;
 
@@ -28,17 +27,17 @@ AKNN::AKNN(const Mat &dst, const Mat &src, ImgKNN &_knnf)
 AKNN::~AKNN(){
 	cout << "release" << endl;
 	double startRelease = getTickCount();
-#pragma omp parallel for 
+//#pragma omp parallel for 
 	for (int i = 0; i < nSrcCols; i++){
 		delete[]NNF[i];
-		//delete[]KNNF[i];
+		delete[]KNNF[i];
 		delete[]offset[i];
 	}
 	delete[]NNF;
-	//delete[]KNNF;
+	delete[]KNNF;
 	delete[]offset;
 	double endRelease = getTickCount();
-	cout << "cleared " <<startRelease-endRelease<< endl;
+	cout << "cleared " <<endRelease-startRelease<< endl;
 }
 
 int AKNN::getV(int K, int lenPatch){
@@ -50,36 +49,27 @@ int AKNN::getV(int K, int lenPatch){
 	return 0;
 }
 
+void AKNN::setDst(Mat &_dst){
+	
+	nDstCols = _dst.cols;
+	nDstRows = _dst.rows;
+	sigma = min(nDstCols, nDstRows) / 3.0;
+	imgDst = _dst;
+}
+
 
 void AKNN::operation(){
 
 	int maxIteration = 4;
 	int odd;
+	initation();
 	for (int iter = 1; iter <= maxIteration; iter++){
 		cout << "start iteration " << iter << endl;
 		odd = iter % 2;
-		initation();
-		if (odd){
-			for (int x = S + 1; x <= nSrcCols - S - 3; x++){
-				for (int y = S + 1; y <= nSrcRows - S - 3; y++){
-					//cout << "progagation..." << endl;
-					progagation(Point(x, y), odd);
-					//cout << "randomSearch..." << endl;
-					randomSearch(Point2i(x, y), NNF[x][y]);
-				}
-			}
-		}
-		else{
-			for (int x = nSrcCols - S - 3; x >= S + 1; x--){
-				for (int y = nSrcRows - S - 3; y >= S + 1; y--){
-					progagation(Point(x, y), odd);
-					randomSearch(Point2i(x, y), NNF[x][y]);
-				}
-			}
-		}
+		
 		//if (odd){
-		//	for (int x = 700; x <= 800; x++){
-		//		for (int y = 50; y <= 150; y++){
+		//	for (int x = S + 1; x <= nSrcCols - S - 3; x++){
+		//		for (int y = S + 1; y <= nSrcRows - S - 3; y++){
 		//			//cout << "progagation..." << endl;
 		//			progagation(Point(x, y), odd);
 		//			//cout << "randomSearch..." << endl;
@@ -88,21 +78,39 @@ void AKNN::operation(){
 		//	}
 		//}
 		//else{
-		//	for (int x = 800; x >= 700; x--){
-		//		for (int y = 150; y >= 50; y--){
+		//	for (int x = nSrcCols - S - 3; x >= S + 1; x--){
+		//		for (int y = nSrcRows - S - 3; y >= S + 1; y--){
 		//			progagation(Point(x, y), odd);
 		//			randomSearch(Point2i(x, y), NNF[x][y]);
 		//		}
 		//	}
 		//}
+		if (odd){
+			for (int x = 700; x <= 850; x++){
+				for (int y = 50; y <= 200; y++){
+					//cout << "progagation..." << endl;
+					progagation(Point(x, y), odd);
+					//cout << "randomSearch..." << endl;
+					randomSearch(Point2i(x, y), NNF[x][y]);
+				}
+			}
+		}
+		else{
+			for (int x = 850; x >= 700; x--){
+				for (int y = 200; y >= 50; y--){
+					progagation(Point(x, y), odd);
+					randomSearch(Point2i(x, y), NNF[x][y]);
+				}
+			}
+		}
 	}
 }
 
 
 
 void AKNN::initation(){
-	int x, y;
-#pragma omp parallel for 
+	
+//#pragma omp parallel for 
 	for (int x = S; x < nSrcCols - S; x++){
 		for (int y = S; y < nSrcRows - S; y++){
 			Point2d n = generateNormal2dVector();
@@ -112,7 +120,9 @@ void AKNN::initation(){
 			p.y = max(S+1, p.y);
 			p.y = min(nDstRows - S - 2, p.y);
 			NNF[x][y] = p;
+			calculateDistance(p, Point2i(x, y));
 			offset[x][y] = calculateDistance(p, Point2i(x, y));
+			KNNF[x][y].push_back(NeighborPatch(p, offset[x][y]));
 		}
 	}
 	
@@ -121,52 +131,82 @@ void AKNN::initation(){
 void AKNN::progagation(Point2i patch, int odd){
 	int x = patch.x;
 	int y = patch.y;
-	Mat nonLapping[4] ;
+	
 	Rect nonLappingDstRect;
 	Rect nonLappingSrcRect;
+	Mat nonLapping(2*S+1,2*S+1,CV_64FC1,Scalar(0));
+	
 	if (odd){
 		//up & left
 		switch (getMinIndex(offset[x][y], offset[x][y - 1], offset[x - 1][y])){
+			
 		case 2:
+			///////////////
+			//    up
+			///////////////
 			if (NNF[x][y - 1].y > nDstRows - S - 2)break;
-			//cout << "up" << endl;
+
 			NNF[x][y] = NNF[x][y-1];
 			NNF[x][y].y += 1;
-			//cout << "pos1" << endl;
-			nonLappingSrcRect=Rect(x-S,y-S-1,S,1);
-			nonLapping[0] = imgSrc(nonLappingSrcRect);
+
+			nonLappingSrcRect=Rect(x-S ,y - S - 1 ,2 * S + 1, 1);
+			
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.row(0));
 			nonLappingSrcRect.y = y + S;
-			nonLapping[1] = imgSrc(nonLappingSrcRect);
-			//cout << "pos2" << endl;
-			nonLappingDstRect = Rect(NNF[x][y].x - S, NNF[x][y].y - S - 1, S, 1);
-			nonLapping[2] = imgDst(nonLappingDstRect);
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.row(1));
+
+			nonLappingDstRect = Rect(NNF[x][y].x - S, NNF[x][y].y - S - 1, 2 * S + 1, 1);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.row(2));
 			nonLappingDstRect.y = NNF[x][y].y + S;
-			nonLapping[3] = imgDst(nonLappingDstRect);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.row(3));
 
 			offset[x][y] = offset[x][y-1] 
-				- calculateDistance(nonLapping[2], nonLapping[0])
-				+ calculateDistance(nonLapping[3], nonLapping[1]);
+				- calculateDistance(nonLapping.row(2), nonLapping.row(0))
+				+ calculateDistance(nonLapping.row(3), nonLapping.row(1));
+
+			if ((offset[x][y] - calculateDistance(NNF[x][y], Point2i(x, y))) != 0){
+				cout << "up" << endl;
+			}
+
+			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
+			KNNF[patch.x][patch.y].pop_back();
 			break;
+			
 		case 3:
+			///////////////
+			//    left
+			///////////////
 			if (NNF[x-1][y].x > nDstCols - S - 2)break;
-			//cout << "left" << endl;
+
 			NNF[x][y] = NNF[x - 1][y];
 			NNF[x][y].x += 1;
-			//cout << "pos3" << endl;
-			nonLappingSrcRect = Rect(x - S - 1, y - S, 1, S);
-			nonLapping[0] = imgSrc(nonLappingSrcRect);
+
+
+			nonLappingSrcRect = Rect(x - S - 1,y - S,1,2 * S + 1);
+			
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.col(0));
 			nonLappingSrcRect.x = x + S;
-			nonLapping[1] = imgSrc(nonLappingSrcRect);
-			//cout << "pos4" << endl;
-			nonLappingDstRect = Rect(NNF[x][y].x - S - 1, NNF[x][y].y - S, 1, S);
-			nonLapping[2] = imgDst(nonLappingDstRect);
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.col(1));
+
+			nonLappingDstRect = Rect(NNF[x][y].x - S - 1,NNF[x][y].y - S,1,2 * S + 1);
+
+			imgDst(nonLappingDstRect).copyTo(nonLapping.col(2));
 			nonLappingDstRect.x = NNF[x][y].x + S;
-			nonLapping[3] = imgDst(nonLappingDstRect);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.col(3));
 
 			offset[x][y] = offset[x - 1][y]
-				- calculateDistance(nonLapping[2], nonLapping[0])
-				+ calculateDistance(nonLapping[3], nonLapping[1]);
+				- calculateDistance(nonLapping.col(2), nonLapping.col(0))
+				+ calculateDistance(nonLapping.col(3), nonLapping.col(1));
+			if ((offset[x][y] - calculateDistance(NNF[x][y], Point2i(x, y))) != 0){
+				cout << "left" << endl;
+			}
+			
+			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
+			KNNF[patch.x][patch.y].pop_back();
+
+
 			break;
+			
 		default:
 			break;
 		}
@@ -175,64 +215,111 @@ void AKNN::progagation(Point2i patch, int odd){
 		//down & right
 		switch (getMinIndex(offset[x][y], offset[x][y + 1], offset[x + 1][y])){
 		case 2:
+			///////////////
+			//    down
+			///////////////
 			if (NNF[x][y+1].y < S+1)break;
 			NNF[x][y] = NNF[x][y + 1];
 			NNF[x][y].y -= 1;
-			nonLappingSrcRect = Rect(x - S, y + S + 1, S, 1);
-			nonLapping[0] = imgSrc(nonLappingSrcRect);
-			nonLappingSrcRect.y = y - S;
-			nonLapping[1] = imgSrc(nonLappingSrcRect);
 
-			nonLappingDstRect = Rect(NNF[x][y].x - S, NNF[x][y].y + S + 1, S, 1);
-			nonLapping[2] = imgDst(nonLappingDstRect);
+
+
+
+			nonLappingSrcRect = Rect(x - S, y + S + 1, 2 * S + 1, 1);
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.row(0));
+			nonLappingSrcRect.y = y - S;
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.row(1));
+
+			nonLappingDstRect = Rect(NNF[x][y].x - S, NNF[x][y].y + S + 1, 2 * S + 1, 1);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.row(2));
 			nonLappingDstRect.y = NNF[x][y].y - S;
-			nonLapping[3] = imgDst(nonLappingDstRect);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.row(3));
 
 			offset[x][y] = offset[x][y + 1]
-				- calculateDistance(nonLapping[2], nonLapping[0])
-				+ calculateDistance(nonLapping[3], nonLapping[1]);
+				- calculateDistance(nonLapping.row(2), nonLapping.row(0))
+				+ calculateDistance(nonLapping.row(3), nonLapping.row(1));
+
+			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
+			KNNF[patch.x][patch.y].pop_back();
+
+			if ((offset[x][y] - calculateDistance(NNF[x][y], Point2i(x, y))) != 0){
+				cout << "down" << endl;
+			}
 			break;
 		case 3:
+			///////////////
+			//    right
+			///////////////
+
+
 			if (NNF[x+1][y ].x < S + 1)break;
 			NNF[x][y] = NNF[x + 1][y];
 			NNF[x][y].x -= 1;
-			nonLappingSrcRect = Rect(x + S + 1, y - S, 1, S);
-			nonLapping[0] = imgSrc(nonLappingSrcRect);
-			nonLappingSrcRect.x = x - S;
-			nonLapping[1] = imgSrc(nonLappingSrcRect);
 
-			nonLappingDstRect = Rect(NNF[x][y].x + S + 1, NNF[x][y].y - S, 1, S);
-			nonLapping[2] = imgDst(nonLappingDstRect);
+
+			nonLappingSrcRect = Rect(x + S + 1, y - S, 1, 2 * S + 1);
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.col(0));
+			nonLappingSrcRect.x = x - S;
+			imgSrc(nonLappingSrcRect).copyTo(nonLapping.col(1));
+
+			nonLappingDstRect = Rect(NNF[x][y].x + S + 1, NNF[x][y].y - S, 1, 2 * S + 1);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.col(2));
 			nonLappingDstRect.x = NNF[x][y].x - S;
-			nonLapping[3] = imgDst(nonLappingDstRect);
+			imgDst(nonLappingDstRect).copyTo(nonLapping.col(3));
+
+
 
 			offset[x][y] = offset[x + 1][y]
-				- calculateDistance(nonLapping[2], nonLapping[0])
-				+ calculateDistance(nonLapping[3], nonLapping[1]);
+				- calculateDistance(nonLapping.col(2), nonLapping.col(0))
+				+ calculateDistance(nonLapping.col(3), nonLapping.col(1));
+
+			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
+			KNNF[patch.x][patch.y].pop_back();
+
+			if ((offset[x][y] - calculateDistance(NNF[x][y], Point2i(x, y))) != 0){
+				cout << nonLapping << endl;
+				cout << offset[x][y] << '\t' << calculateDistance(NNF[x][y], Point2i(x, y)) << endl;
+				cout << NNF[x][y] << '\t' << NNF[x+1][y] << endl;
+				cout << "right" << endl;
+			}
 			break;
 		default:
+
 			break;
 		}
 	}
-	handleQueue(KNNF[patch.x][patch.y], NeighborPatch(NNF[x][y], offset[x][y]));
+	
 	
 }
 
 void AKNN::randomSearch(Point2i pSrc,Point2i nnf){
 	int M = min(log2(sigma), K*1.0);
+	Point2d n;
+	Point2i v, p;
+	double distance;
+	//KNN nP;
+
+
 	for (int i = 1; i <= M; i++){
-		Point2d n = generateNormal2dVector();
-		Point2i v = sigma*pow(ALPHA, i)*n;
-		Point2i p = nnf + v;
+		n = generateNormal2dVector();
+		v = sigma*pow(ALPHA, i)*n;
+		p = nnf + v;
 
 		p.x = max(S, p.x);
 		p.x = min(nDstCols - S - 1, p.x);
 		p.y = max(S, p.y);
 		p.y = min(nDstRows - S - 1, p.y);
 
-		double distance = calculateDistance(p, pSrc);
-		handleQueue(KNNF[pSrc.x][pSrc.y],NeighborPatch(p, distance));
+		distance = calculateDistance(p, pSrc);
+		handleQueue(KNNF[pSrc.x][pSrc.y], NeighborPatch(p, distance));
+		if (distance < offset[pSrc.x][pSrc.y])nnf = p;
+		
 	}
+	offset[pSrc.x][pSrc.y] = KNNF[pSrc.x][pSrc.y][0].distance;
+	NNF[pSrc.x][pSrc.y] = KNNF[pSrc.x][pSrc.y][0].p;
+
+
+	
 	return;
 }
 
@@ -287,12 +374,12 @@ Point2d AKNN::generateNormal2dVector(){
 
 
 int AKNN::getMinIndex(double a, double b, double c){
-	if (a<b){
-		if (a < c)return 1;
+	if (a<=b){
+		if (a <= c)return 1;
 		return 3;
 	}
 	else{
-		if (b < c)return 2;
+		if (b <= c)return 2;
 		return 3;
 	}
 }
