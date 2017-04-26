@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\OpticalFlow">
+      <UniqueIdentifier>{a99ddf2f-7315-4a12-9b03-1746675d6d17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\OpticalFlow">
+      <UniqueIdentifier>{85325618-fe01-4817-a1b4-1526428317a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AKNN.h">
@@ -23,6 +29,33 @@
     </ClInclude>
     <ClInclude Include="VideoDenoisingME.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\Image.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\ImageIO.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\ImageProcessing.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\Matrix.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\NoiseModel.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\OpticalFlow.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\project.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\Stochastic.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
+    <ClInclude Include="mex\GaussianPyramid.h">
+      <Filter>头文件\OpticalFlow</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -37,6 +70,15 @@
     </ClCompile>
     <ClCompile Include="VideoDenoisingEM.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="mex\GaussianPyramid.cpp">
+      <Filter>源文件\OpticalFlow</Filter>
+    </ClCompile>
+    <ClCompile Include="mex\Stochastic.cpp">
+      <Filter>源文件\OpticalFlow</Filter>
+    </ClCompile>
+    <ClCompile Include="mex\OpticalFlow.cpp">
+      <Filter>源文件\OpticalFlow</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

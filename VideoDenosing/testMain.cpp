@@ -1,10 +1,11 @@
-#include <opencv2/opencv.hpp>
 #include <iostream>
 #include "VideoDenoisingME.h"
+#include<windows.h>
+#include"mex\OpticalFlow.h"
 #include <time.h>
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 
 void test()
@@ -14,7 +15,38 @@ void test()
 		a++;
 }
 
+void mat2DImage(cv::Mat srcMat, DImage& dstDImage){
+	int width = srcMat.cols;
+	int height = srcMat.rows;
+	if (dstDImage.height() == 0 && dstDImage.width() == 0){
+		dstDImage.allocate(width, height);
+	}
+	else{
+		dstDImage.imresize(width, height);
+	}
+	for (int i = 0; i < height; i++){
+		for (int j = 0; j < width; j++){
+			dstDImage.pData[i*width + j] = srcMat.at<double>(i, j);
+		}
+	}
+}
+
 int main(){
+	//cv::Mat src;
+	//src = cv::imread("E:\\C++\\PatchMatch-master\\lena.bmp", 0);
+	//src.convertTo(src, CV_64FC1);
+	//DImage dst;
+	//mat2DImage(src, dst);
+	//const double *test1DImage = dst.data();
+	//cout << test1DImage[2] << endl;
+	//DImage aaa;
+	//aaa.imread("E:\\C++\\PatchMatch-master\\lena.bmp");
+	//const double *testDImage = aaa.data();
+	//cout << testDImage[2] << endl;
+	//max(2,3);
+	//cv::Vector<cv::Mat>aaaa;
+	//cv::waitKey();
+
 	//ImgKNN a;
 	//a = new KNN *[1000];
 	//KNN aa;
@@ -41,7 +73,7 @@ int main(){
 
 
 
-	vector<Mat>frames;
+	vector<cv::Mat>frames;
 	VideoDenoisingME b;
 	b.processing(frames,"E:\\C++\\video1.mp4", "aa", 11, 5, 7);
 
@@ -70,17 +102,18 @@ int main(){
 	//	imshow("video", test[i]);
 	//	waitKey();
 	//}
-
+	
 
 	//while (1){
 	//	double start = GetTickCount();
 	//	Mat srcimg, tarimg;
 	//	srcimg = imread("E:\\C++\\PatchMatch-master\\lena.bmp", 0);
-	//	srcimg.convertTo(srcimg, CV_64FC1);
+	//	//srcimg.convertTo(srcimg, CV_64FC1);
 
 	//	tarimg = imread("E:\\C++\\PatchMatch-master\\barbara.bmp", 0);
-	//	tarimg.convertTo(tarimg, CV_64FC1);
+	//	//tarimg.convertTo(tarimg, CV_64FC1);
 
+	//	//OpticalFlow::Coarse2FineFlow(srcimg);
 	//	Rect certain(100, 100, 200, 200);
 	//	Mat tt = srcimg(certain);
 	//	ImgKNN result;

@@ -52,7 +52,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <OpenMPSupport>true</OpenMPSupport>
@@ -82,11 +82,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AKNN.h" />
+    <ClInclude Include="mex\GaussianPyramid.h" />
+    <ClInclude Include="mex\Image.h" />
+    <ClInclude Include="mex\ImageIO.h" />
+    <ClInclude Include="mex\ImageProcessing.h" />
+    <ClInclude Include="mex\Matrix.h" />
+    <ClInclude Include="mex\NoiseModel.h" />
+    <ClInclude Include="mex\OpticalFlow.h" />
+    <ClInclude Include="mex\project.h" />
+    <ClInclude Include="mex\Stochastic.h" />
     <ClInclude Include="NLM.h" />
     <ClInclude Include="VideoDenoisingME.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AKNN.cpp" />
+    <ClCompile Include="mex\GaussianPyramid.cpp" />
+    <ClCompile Include="mex\OpticalFlow.cpp" />
+    <ClCompile Include="mex\Stochastic.cpp" />
     <ClCompile Include="NLM.cpp" />
     <ClCompile Include="testMain.cpp" />
     <ClCompile Include="VideoDenoisingEM.cpp" />

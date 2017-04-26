@@ -1,12 +1,15 @@
 # pragma once
 
-#include <opencv2/opencv.hpp>
+//#include "cv.h"
+//#include "highgui.h"
+#include"mex\OpticalFlow.h"
 #include <math.h>
 #include <iostream>
+#include <windows.h> 
 #include<ctime>
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 # define ALPHA   0.5
 # define NUMMOD  1000
@@ -14,9 +17,9 @@ using namespace cv;
 
 
 struct NeighborPatch{
-	Point2i p;
+	cv::Point2i p;
 	double distance;
-	NeighborPatch(Point2i mP, double mDistance){
+	NeighborPatch(cv::Point2i mP, double mDistance){
 		p = mP; distance = mDistance;
 	}
 };
@@ -26,8 +29,8 @@ typedef KNN ** ImgKNN;
 
 class AKNN{
 private:
-	Mat imgDst;                         //img in certain flame
-	const Mat &imgSrc;                      //img with original patch
+	cv::Mat imgDst;                         //img in certain flame
+	const cv::Mat &imgSrc;                      //img with original patch
 
 	int K;                           //K nearest neighbors
 	int S;                           //half edge of searching patch
@@ -39,24 +42,24 @@ private:
 	int nDstRows;
 	int nDstCols;
 
-	Point2i **NNF;
+	cv::Point2i **NNF;
 	double **offset;
 	ImgKNN &KNNF;
 
 public:
-	AKNN( const Mat &src, ImgKNN &_knnf);
+	AKNN(const cv::Mat &src, ImgKNN &_knnf);
 	~AKNN();
 	int getV(int K, int lenPatch);
-	void setDst(Mat &dst);
+	void setDst(cv::Mat &dst);
 
 private:
 	void initation();
-	void progagation(Point2i patch, int odd);
-	void randomSearch(Point2i pSrc, Point2i nnf);
+	void progagation(cv::Point2i patch, int odd);
+	void randomSearch(cv::Point2i pSrc, cv::Point2i nnf);
 	void handleQueue(KNN &knn, NeighborPatch);
 	void operation();
-	double calculateDistance(Point2i pDst, Point2i pSrc);
-	double calculateDistance(Mat q, Mat p);
-	Point2d generateNormal2dVector();
+	double calculateDistance(cv::Point2i pDst, cv::Point2i pSrc);
+	double calculateDistance(cv::Mat q, cv::Mat p);
+	cv::Point2d generateNormal2dVector();
 	int getMinIndex(double a, double b, double c);
 }; 

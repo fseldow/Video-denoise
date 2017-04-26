@@ -1,30 +1,35 @@
 # pragma once
 
-#include <opencv2/opencv.hpp>
+//#include "cv.h"
+//#include "highgui.h"
+#include"mex\OpticalFlow.h"
 #include <iostream>
 #include <math.h>
+#include <windows.h> 
 #include"AKNN.h"
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
+#ifndef PI
 #define PI 3.1415926
+#endif
 
-struct NLM :ParallelLoopBody{
+struct NLM :cv::ParallelLoopBody{
 	float gama;
 	float sigma_p;
 	int H;
 	int K;
 	int S;
-	vector<Mat> &frames;
-	vector<Mat> &dst;
+	vector<cv::Mat> &frames;
+	cv::Mat &dst;
 public:
-	Rect board;
-	void operator() (const Range& range) const;
-	NLM(int H, int K, int lenPatch, vector<Mat>&frames, vector<Mat> &dst);
-	double getSigma_t(Mat src_t, Mat src_f)const;
-	double NLM_Estimate(Point3i z, double _sigma_t, vector<ImgKNN> NNF)const;
-	double weightedSSD(Point3i p, Point3i q)const;
+	cv::Rect board;
+	void operator() (const cv::Range& range) const;
+	NLM(int H, int K, int lenPatch, vector<cv::Mat>&frames, cv::Mat &dst);
+	double getSigma_t(cv::Mat src_t, cv::Mat src_f, KNN z, DImage vx, DImage vy)const;
+	double NLM_Estimate(cv::Point3i z, double _sigma_t, vector<ImgKNN> NNF)const;
+	double weightedSSD(cv::Point3i p, cv::Point3i q)const;
 private:
 	
 	
