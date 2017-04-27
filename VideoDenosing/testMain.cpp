@@ -8,12 +8,7 @@ using namespace std;
 //using namespace cv;
 
 
-void test()
-{
-	int a = 0;
-	for (int i = 0; i<100000000; i++)
-		a++;
-}
+
 
 void mat2DImage(cv::Mat srcMat, DImage& dstDImage){
 	int width = srcMat.cols;
@@ -32,75 +27,24 @@ void mat2DImage(cv::Mat srcMat, DImage& dstDImage){
 }
 
 int main(){
-	//cv::Mat src;
-	//src = cv::imread("E:\\C++\\PatchMatch-master\\lena.bmp", 0);
-	//src.convertTo(src, CV_64FC1);
-	//DImage dst;
-	//mat2DImage(src, dst);
-	//const double *test1DImage = dst.data();
-	//cout << test1DImage[2] << endl;
-	//DImage aaa;
-	//aaa.imread("E:\\C++\\PatchMatch-master\\lena.bmp");
-	//const double *testDImage = aaa.data();
-	//cout << testDImage[2] << endl;
-	//max(2,3);
-	//cv::Vector<cv::Mat>aaaa;
-	//cv::waitKey();
-
-	//ImgKNN a;
-	//a = new KNN *[1000];
-	//KNN aa;
-	//for (int i = 0; i < 121; i++){
-	//	aa.push_back(NeighborPatch(Point2i(-1, -1), 1));
-	//}
-	////for (int i = 0; i < 11; i++){
-	//	//a[i] = new KNN *[1000];
-	//	for (int j = 0; j < 1000; j++){
-	//		a[j] = new KNN[1000];
-	//		for (int k = 0; k < 1000; k++){
-	//			a[j][k] = aa;
-	//		}
-	//	}
-	////}
-
-
-	/*clock_t t1 = clock();
-    #pragma omp parallel for  
-	for (int i = 0; i<8; i++)
-		test();
-	clock_t t2 = clock();
-	std::cout << "time: " << t2 - t1 << std::endl;*/
-
-
-
 	vector<cv::Mat>frames;
 	VideoDenoisingME b;
 	b.processing(frames,"E:\\C++\\video1.mp4", "aa", 11, 5, 7);
 
 
-	//vector<Mat> test;
-	//Mat result;
-	//VideoCapture capture("E:\\C++\\video1.mp4");
-	//for (int i = 0; i < 11;i++){
-	//	Mat frame;
+	//vector<cv::Mat> test;
+	//cv::Mat result;
+	//cv::VideoCapture capture("E:\\C++\\video1_poor.mp4");
+	//while(1){
+	//	cv::Mat frame;
 	//	capture >> frame;
 	//	if (frame.empty())break;
 	//	test.push_back(frame);
-	//	//imshow("video", frame);
-	//	//waitKey();
 	//}
-
-
-	//double start = GetTickCount();
-	//fastNlMeansDenoisingColoredMulti(test, result, 5, 11,36);
-	//double end = GetTickCount();
-	//cout << end - start << endl;
-	//imwrite("result.png",result);
-	//imshow("aa", result);
-	//waitKey();
-	//for (int i = 0; i < test.size(); i++){
-	//	imshow("video", test[i]);
-	//	waitKey();
+	//VideoDenoisingME b;
+	//vector<cv::Mat> src;
+	//for (int i = 20; i < 30; i++){
+	//	src.push_back()
 	//}
 	
 

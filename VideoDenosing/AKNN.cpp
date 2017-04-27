@@ -27,9 +27,11 @@ AKNN::AKNN(const cv::Mat &src, ImgKNN &_knnf)
 AKNN::~AKNN(){
 	cout << "release" << endl;
 	//double startRelease = getTickCount();
-//#pragma omp parallel for 
+#pragma omp parallel for
 	for (int i = 0; i < nSrcCols; i++){
 		delete[]NNF[i];
+		for (int j = 0; j < nSrcRows; j++)
+			KNN().swap(KNNF[i][j]);
 		delete[]KNNF[i];
 		delete[]offset[i];
 	}
@@ -60,16 +62,45 @@ void AKNN::setDst(cv::Mat &_dst){
 
 void AKNN::operation(){
 
-	int maxIteration = 4;
+	int maxIteration = 2;
 	int odd;
 	initation();
 	for (int iter = 1; iter <= maxIteration; iter++){
 		cout << "start iteration " << iter << endl;
 		odd = iter % 2;
 		
+		if (odd){
+			for (int x = S + 1; x <= nSrcCols - S - 3; x++){
+				for (int y = S + 1; y <= nSrcRows - S - 3; y++){
+					progagation(cv::Point2i(x, y), odd);
+				}
+			}
+            #pragma omp parallel for
+			for (int x = S + 1; x <= nSrcCols - S - 3; x++){
+				for (int y = S + 1; y <= nSrcRows - S - 3; y++){
+					randomSearch(cv::Point2i(x, y), NNF[x][y]);
+				}
+			}
+		}
+
+
+		else{
+			for (int x = nSrcCols - S - 3; x >= S + 1; x--){
+				for (int y = nSrcRows - S - 3; y >= S + 1; y--){
+					progagation(cv::Point2i(x, y), odd);
+				}
+			}
+           #pragma omp parallel for
+			for (int x = S + 1; x <= nSrcCols - S - 3; x++){
+				for (int y = S + 1; y <= nSrcRows - S - 3; y++){
+
+					randomSearch(cv::Point2i(x, y), NNF[x][y]);
+				}
+			}
+		}
 		//if (odd){
-		//	for (int x = S + 1; x <= nSrcCols - S - 3; x++){
-		//		for (int y = S + 1; y <= nSrcRows - S - 3; y++){
+		//	for (int x = 700; x <= 850; x++){
+		//		for (int y = 50; y <= 200; y++){
 		//			//cout << "progagation..." << endl;
 		//			progagation(cv::Point2i(x, y), odd);
 		//			//cout << "randomSearch..." << endl;
@@ -78,31 +109,13 @@ void AKNN::operation(){
 		//	}
 		//}
 		//else{
-		//	for (int x = nSrcCols - S - 3; x >= S + 1; x--){
-		//		for (int y = nSrcRows - S - 3; y >= S + 1; y--){
-		//			progagation(Point2i(x, y), odd);
-		//			randomSearch(Point2i(x, y), NNF[x][y]);
+		//	for (int x = 850; x >= 700; x--){
+		//		for (int y = 200; y >= 50; y--){
+		//			progagation(cv::Point2i(x, y), odd);
+		//			randomSearch(cv::Point2i(x, y), NNF[x][y]);
 		//		}
 		//	}
 		//}
-		if (odd){
-			for (int x = 700; x <= 850; x++){
-				for (int y = 50; y <= 200; y++){
-					//cout << "progagation..." << endl;
-					progagation(cv::Point2i(x, y), odd);
-					//cout << "randomSearch..." << endl;
-					randomSearch(cv::Point2i(x, y), NNF[x][y]);
-				}
-			}
-		}
-		else{
-			for (int x = 850; x >= 700; x--){
-				for (int y = 200; y >= 50; y--){
-					progagation(cv::Point2i(x, y), odd);
-					randomSearch(cv::Point2i(x, y), NNF[x][y]);
-				}
-			}
-		}
 	}
 }
 
@@ -164,10 +177,7 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 				- calculateDistance(nonLapping.row(2), nonLapping.row(0))
 				+ calculateDistance(nonLapping.row(3), nonLapping.row(1));
 
-			if ((offset[x][y] - calculateDistance(NNF[x][y], cv::Point2i(x, y))) != 0){
-				cout << "up" << endl;
-			}
-
+\
 			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
 			KNNF[patch.x][patch.y].pop_back();
 			break;
@@ -197,9 +207,7 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 			offset[x][y] = offset[x - 1][y]
 				- calculateDistance(nonLapping.col(2), nonLapping.col(0))
 				+ calculateDistance(nonLapping.col(3), nonLapping.col(1));
-			if ((offset[x][y] - calculateDistance(NNF[x][y], cv::Point2i(x, y))) != 0){
-				cout << "left" << endl;
-			}
+
 			
 			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
 			KNNF[patch.x][patch.y].pop_back();
@@ -242,9 +250,7 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
 			KNNF[patch.x][patch.y].pop_back();
 
-			if ((offset[x][y] - calculateDistance(NNF[x][y], cv::Point2i(x, y))) != 0){
-				cout << "down" << endl;
-			}
+
 			break;
 		case 3:
 			///////////////
@@ -276,12 +282,7 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
 			KNNF[patch.x][patch.y].pop_back();
 
-			if ((offset[x][y] - calculateDistance(NNF[x][y], cv::Point2i(x, y))) != 0){
-				cout << nonLapping << endl;
-				cout << offset[x][y] << '\t' << calculateDistance(NNF[x][y], cv::Point2i(x, y)) << endl;
-				cout << NNF[x][y] << '\t' << NNF[x+1][y] << endl;
-				cout << "right" << endl;
-			}
+
 			break;
 		default:
 

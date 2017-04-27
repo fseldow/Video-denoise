@@ -263,6 +263,8 @@ void OpticalFlow::SmoothFlowSOR(const DImage &Im1, const DImage &Im2, DImage &wa
 			vxData=vx.data();
 			vyData=vy.data();
 			double power_alpha = 0.5;
+
+#pragma omp parallel for
 			for(int i=0;i<nPixels;i++)
 			{
 				temp=uxData[i]*uxData[i]+uyData[i]*uyData[i]+vxData[i]*vxData[i]+vyData[i]*vyData[i];
@@ -284,6 +286,7 @@ void OpticalFlow::SmoothFlowSOR(const DImage &Im1, const DImage &Im2, DImage &wa
 		
 			double _a  = 10000, _b = 0.1;
 			if(nChannels==1)
+///#pragma omp parallel for
 				for(int i=0;i<nPixels;i++)
 				{
 					temp=imdtData[i]+imdxData[i]*duData[i]+imdyData[i]*dvData[i];
@@ -311,6 +314,7 @@ void OpticalFlow::SmoothFlowSOR(const DImage &Im1, const DImage &Im2, DImage &wa
 					}
 				}
 			else
+//#pragma omp parallel for
 				for(int i=0;i<nPixels;i++)
 					for(int k=0;k<nChannels;k++)
 					{
@@ -379,6 +383,7 @@ void OpticalFlow::SmoothFlowSOR(const DImage &Im1, const DImage &Im2, DImage &wa
 			dv.reset();
 
 			for(int k = 0; k<nSORIterations; k++)
+#pragma omp parallel for
 				for(int i = 0; i<imHeight; i++)
 					for(int j = 0; j<imWidth; j++)
 					{
@@ -995,12 +1000,17 @@ void OpticalFlow::Coarse2FineFlow(DImage &vx, DImage &vy, DImage &warpI2,const D
 				warpFL(WarpImage2,Image1,Image2,vx,vy);
 			else
 				Image2.warpImageBicubicRef(Image1,WarpImage2,vx,vy);
+
 		}
 		//SmoothFlowPDE(GPyramid1.Image(k),GPyramid2.Image(k),warpI2,vx,vy,alpha,nOuterFPIterations,nInnerFPIterations,nCGIterations);
 		//SmoothFlowPDE(Image1,Image2,WarpImage2,vx,vy,alpha*pow((1/ratio),k),nOuterFPIterations,nInnerFPIterations,nCGIterations,GMPara);
 		
 		//SmoothFlowPDE(Image1,Image2,WarpImage2,vx,vy,alpha,nOuterFPIterations,nInnerFPIterations,nCGIterations);
+
+		//double start = cvGetTickCount();
 		SmoothFlowSOR(Image1,Image2,WarpImage2,vx,vy,alpha,nOuterFPIterations+k,nInnerFPIterations,nCGIterations+k*3);
+		//double end = GetTickCount();
+		//cout << "smoothFlowSor: "<<end - start << endl;
 
 		//GMPara.display();
 		if(IsDisplay)

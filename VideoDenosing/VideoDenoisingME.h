@@ -44,6 +44,7 @@ private:
 	void multiChannelHandle(vector<cv::Mat>&dstFrames);
 	double getSigma_t(cv::Mat src_t, cv::Mat src_f, DImage vx, DImage vy);
 	double weightedSSD(cv::Point3i p, cv::Point3i q, vector<cv::Mat>frames);
+
 	void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
 		int width = srcMat.cols;
 		int height = srcMat.rows;
