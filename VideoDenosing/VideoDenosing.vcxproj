@@ -91,7 +91,6 @@
     <ClInclude Include="mex\OpticalFlow.h" />
     <ClInclude Include="mex\project.h" />
     <ClInclude Include="mex\Stochastic.h" />
-    <ClInclude Include="NLM.h" />
     <ClInclude Include="VideoDenoisingME.h" />
   </ItemGroup>
   <ItemGroup>
@@ -99,7 +98,6 @@
     <ClCompile Include="mex\GaussianPyramid.cpp" />
     <ClCompile Include="mex\OpticalFlow.cpp" />
     <ClCompile Include="mex\Stochastic.cpp" />
-    <ClCompile Include="NLM.cpp" />
     <ClCompile Include="testMain.cpp" />
     <ClCompile Include="VideoDenoisingEM.cpp" />
   </ItemGroup>

@@ -62,7 +62,7 @@ void AKNN::setDst(cv::Mat &_dst){
 
 void AKNN::operation(){
 
-	int maxIteration = 2;
+	int maxIteration = 4;
 	int odd;
 	initation();
 	for (int iter = 1; iter <= maxIteration; iter++){
@@ -147,7 +147,7 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 	
 	cv::Rect nonLappingDstRect;
 	cv::Rect nonLappingSrcRect;
-	cv::Mat nonLapping(2 * S + 1, 2 * S + 1, CV_64FC1, cv::Scalar(0));
+	cv::Mat nonLapping(2 * S + 1, 2 * S + 1, imgSrc.depth(), cv::Scalar(0));
 	
 	if (odd){
 		//up & left
@@ -334,7 +334,7 @@ double AKNN::calculateDistance(cv::Mat q, cv::Mat p){
 	double result = 0.0;
 	for (int i = 0; i < q.rows; i++){
 		for (int j = 0; j < q.cols; j++){
-			result += pow(q.at<double>(i,j) - p.at<double>(i, j), 2);
+			result += pow(q.at<uchar>(i, j) - p.at<uchar>(i, j), 2);
 		}
 	}
 	return result;

@@ -39,10 +39,10 @@ void VideoDenoisingME::singalChannelHandle(vector<cv::Mat>&dstFrames){
 		cv::Mat tempFrame;
 		capture >> tempFrame;
 		if (tempFrame.empty())break;
-		if (tempFrame.type() != CV_64FC1){
-			tempFrame.convertTo(tempFrame, CV_64FC1);
-			//tempFrame = tempFrame * 1.0 / 255;
-		}
+		//if (tempFrame.type() != CV_64FC1){
+		//	tempFrame.convertTo(tempFrame, CV_64FC1);
+		//	//tempFrame = tempFrame * 1.0 / 255;
+		//}
 		gFrames.push_back(tempFrame);
 	}
 	while (1){
@@ -51,10 +51,10 @@ void VideoDenoisingME::singalChannelHandle(vector<cv::Mat>&dstFrames){
 		capture >> tempFrame;
 		if (tempFrame.empty())break;
 
-		if (tempFrame.type() != CV_64FC1){
-			tempFrame.convertTo(tempFrame, CV_64FC1);
-			//tempFrame = tempFrame * 1.0 / 255;
-		}
+		//if (tempFrame.type() != CV_64FC1){
+		//	tempFrame.convertTo(tempFrame, CV_64FC1);
+		//	//tempFrame = tempFrame * 1.0 / 255;
+		//}
 
 		gFrames._Pop_back_n(0);
 		gFrames.push_back(tempFrame);
@@ -91,10 +91,10 @@ void VideoDenoisingME::multiChannelHandle(vector<cv::Mat>&dstFrames){
 		capture >> tempFrame;
 		if (tempFrame.empty())break;
 
-		if (tempFrame.type() != CV_64FC1){
-			tempFrame.convertTo(tempFrame, CV_64FC1);
-			//tempFrame = tempFrame * 1.0 / 255;
-		}
+		//if (tempFrame.type() != CV_64FC1){
+		//	tempFrame.convertTo(tempFrame, CV_64FC1);
+		//	//tempFrame = tempFrame * 1.0 / 255;
+		//}
 
 		vector<cv::Mat>singleFrameRBG;
 		split(tempFrame, singleFrameRBG);
@@ -124,12 +124,14 @@ void VideoDenoisingME::multiChannelHandle(vector<cv::Mat>&dstFrames){
 
 		if (tempFrame.empty())break;
 
-		if (tempFrame.type() != CV_64FC1){
-			tempFrame.convertTo(tempFrame, CV_64FC1);
-			//tempFrame = tempFrame * 1.0 / 255;
-		}
+		//if (tempFrame.type() != CV_64FC1){
+		//	tempFrame.convertTo(tempFrame, CV_64FC1);
+		//	//tempFrame = tempFrame * 1.0 / 255;
+		//}
 
 		
+
+		double startTime = GetTickCount();
 
 		vector<cv::Mat>singleFrameRBG;
 		split(tempFrame,singleFrameRBG);
@@ -167,9 +169,11 @@ void VideoDenoisingME::multiChannelHandle(vector<cv::Mat>&dstFrames){
 		singleOutFrameRBG.push_back(gOutFrames);
 		merge(singleOutFrameRBG, tempFrame);
 		
-		
+		double endTime=GetTickCount();
+		cout << "Total Time: " << endTime - startTime << endl;
+
 		imwrite("out.jpg", tempFrame);
-		tempFrame = tempFrame*1.0 / 255.0;
+		//tempFrame = tempFrame*1.0 / 255.0;
 		imshow("frame", tempFrame);
 		cv::waitKey();
 		dstFrames.push_back(tempFrame);
@@ -239,89 +243,89 @@ void VideoDenoisingME::videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOu
 	//Optical Flow
 	//----------------------------------------------------------------------------------------------------
 
-//	cout << "------------------------------------------------\nstart Optical Flow" << endl;
-//	double startOF = GetTickCount();
-//
-//	vector<DImage>v_vx, v_vy;
-//	DImage pre, cur;
-//	mat2DImage(framesSrc[H], pre);
-//
-//
-//	for (int f = 0; f < 2 * H + 1; f++){
-//		DImage vx, vy, warp;
-//		if (f == H){
-//			vx.allocate(width, height);
-//			vy.allocate(width, height);
-//			for (int i = 0; i < height; i++){
-//				for (int j = 0; j < width; j++){
-//					vx.pData[i*width + j] = 0;
-//					vy.pData[i*width + j] = 0;
-//				}
-//			}
-//			v_vx.push_back(vx);
-//			v_vy.push_back(vy);
-//			continue;
-//		}
-//		mat2DImage(framesSrc[f], cur);
-//		OpticalFlow::Coarse2FineFlow(vx, vy, warp, pre, cur, 1, 0.7, 30, 3, 1, 40);
-//		int pixel =  60 * width + 200;
-//		cout << vx. data()[pixel] <<'\t'<< vy.data()[pixel] << endl;
-//		v_vx.push_back(vx);
-//		v_vy.push_back(vy);
-//	}
-//	pre.clear();
-//	cur.clear();
-//
-//	double endOF = GetTickCount();
-//	cout << "use time : " << endOF - startOF << endl;
-//
-//	//-------------------------------------------------------------------------------
-//	//calculate sigma_t
-//	//-------------------------------------------------------------------------------
-//
-//	double sigma_t = getSigma_t(framesSrc[H], framesSrc[H + 1],v_vx[H+1],v_vy[H+1]);
-//
-//
-//
-//
-//	//-------------------------------------------------------------------------------
-//	//start calculate every pixel via NLM
-//	//-------------------------------------------------------------------------------
-//
-//	cout << "------------------------------------------------\nstart NLM" << endl;
-//	double startNLM = GetTickCount();
-//
-//	int x_start=S+2, x_end=width-S-3;
-//	int y_start = S + 2, y_end = height - S - 3;
-//
-//#pragma omp parallel for
-//	for (int x = x_start; x < x_end; x++){
-//		for (int y = y_start; y < y_end; y++){
-//			double I = 0;
-//			double Z = 0;
-//			KNN matchPatchCurrentFrame = result[x][y];
-//			for (int f = 0; f < H*2+1; f++){
-//				for (int k = 0; k < K; k++){
-//					cv::Point3i p = cv::Point3i(x, y, H);
-//					cv::Point3i neighbor = cv::Point3i(
-//						result[x][y][k].p.x + v_vx[f].pData[y*width + x],
-//						result[x][y][k].p.y + v_vy[f].pData[y*width + x],
-//						f);
-//					if (neighbor.x>S && neighbor.x<width -S-1 && neighbor.y>S && neighbor.y<height -S- 1){
-//						double Dw = weightedSSD(neighbor, p, framesSrc);
-//						double temp = pow(GAMA, abs(f - H)) * exp(-(Dw / (2 * sigma_t*sigma_t)));
-//						Z += temp;
-//						I += framesSrc[f].at<double>(neighbor.y, neighbor.x) * temp;
-//					}
-//				}
-//			}
-//			I /= Z;
-//			framesOut.at<double>(y, x) = I;
-//		}
-//	}
+	cout << "------------------------------------------------\nstart Optical Flow" << endl;
+	double startOF = GetTickCount();
+
+	vector<DImage>v_vx, v_vy;
+	DImage pre, cur;
+	mat2DImage(framesSrc[H], pre);
+
+
+	for (int f = 0; f < 2 * H + 1; f++){
+		DImage vx, vy, warp;
+		if (f == H){
+			vx.allocate(width, height);
+			vy.allocate(width, height);
+			for (int i = 0; i < height; i++){
+				for (int j = 0; j < width; j++){
+					vx.pData[i*width + j] = 0;
+					vy.pData[i*width + j] = 0;
+				}
+			}
+			v_vx.push_back(vx);
+			v_vy.push_back(vy);
+			continue;
+		}
+		mat2DImage(framesSrc[f], cur);
+		OpticalFlow::Coarse2FineFlow(vx, vy, warp, pre, cur, 1, 0.7, 30, 3, 1, 40);
+		int pixel =  60 * width + 200;
+		cout << vx. data()[pixel] <<'\t'<< vy.data()[pixel] << endl;
+		v_vx.push_back(vx);
+		v_vy.push_back(vy);
+	}
+	pre.clear();
+	cur.clear();
+
+	double endOF = GetTickCount();
+	cout << "use time : " << endOF - startOF << endl;
+
+	//-------------------------------------------------------------------------------
+	//calculate sigma_t
+	//-------------------------------------------------------------------------------
+
+	double sigma_t = getSigma_t(framesSrc[H], framesSrc[H + 1],v_vx[H+1],v_vy[H+1]);
+
+
+
+
+	//-------------------------------------------------------------------------------
+	//start calculate every pixel via NLM
+	//-------------------------------------------------------------------------------
+
+	cout << "------------------------------------------------\nstart NLM" << endl;
+	double startNLM = GetTickCount();
+
+	int x_start=S+2, x_end=width-S-3;
+	int y_start = S + 2, y_end = height - S - 3;
+
+#pragma omp parallel for
+	for (int x = x_start; x < x_end; x++){
+		for (int y = y_start; y < y_end; y++){
+			double I = 0;
+			double Z = 0;
+			KNN matchPatchCurrentFrame = result[x][y];
+			for (int f = 0; f < H*2+1; f++){
+				for (int k = 0; k < K; k++){
+					cv::Point3i p = cv::Point3i(x, y, H);
+					cv::Point3i neighbor = cv::Point3i(
+						result[x][y][k].p.x + v_vx[f].pData[y*width + x],
+						result[x][y][k].p.y + v_vy[f].pData[y*width + x],
+						f);
+					if (neighbor.x>S && neighbor.x<width -S-1 && neighbor.y>S && neighbor.y<height -S- 1){
+						double Dw = weightedSSD(neighbor, p, framesSrc);
+						double temp = pow(GAMA, abs(f - H)) * exp(-(Dw / (2 * sigma_t*sigma_t)));
+						Z += temp;
+						I += framesSrc[f].at<uchar>(neighbor.y, neighbor.x) * temp;
+					}
+				}
+			}
+			I /= Z;
+			framesOut.at<uchar>(y, x) = cv::saturate_cast<uchar> (I);
+		}
+	}
 
 	double endNLM = GetTickCount();
-//	cout << "use time : " << endNLM - startNLM << endl;
+	cout << "use time : " << endNLM - startNLM << endl;
 }
 
 
@@ -345,7 +349,7 @@ double VideoDenoisingME::getSigma_t(cv::Mat src_t, cv::Mat src_f,  DImage vx, DI
 				cv::Point2i z(x, y);
 				cv::Point2i pNeighbor(x + vx.pData[y*width + x], y + vy.pData[y*width + x]);
 				if (pNeighbor.x < 0 || pNeighbor.y < 0 || pNeighbor.x >= cols || pNeighbor.y >= rows)continue;
-				J = src_t.at<double>(z) - src_f.at<double>(pNeighbor);
+				J = src_t.at<uchar>(z) -src_f.at<uchar>(pNeighbor);
 				alfa.at<double>(z) = exp(-J / (2 * sigma_n*sigma_n)) / (exp(-J / (2 * sigma_n*sigma_n)) + 0.5*sigma_n*pow(2 * PI, 0.5));
 				//int test = alfa.at<double>(i, j);
 				sigma_temp1 += J*J*alfa.at<double>(z);
@@ -363,7 +367,7 @@ double VideoDenoisingME::weightedSSD(cv::Point3i p, cv::Point3i q,vector<cv::Mat
 	for (int i = -S; i <= S; i++){
 		for (int j = -S; j <= S; j++){
 			double temp = exp(-(i*i + j*j) / (2.0 * sigma_p*sigma_p));
-			D += pow(_frames[p.z].at<double>(p.y + j, p.x + i) - _frames[q.z].at<double>(p.y + j, p.x + i), 2)*temp;
+			D += pow(_frames[p.z].at<uchar>(p.y + j, p.x + i) - _frames[q.z].at<uchar>(p.y + j, p.x + i), 2)*temp;
 			D_norm += temp;
 		}
 	}

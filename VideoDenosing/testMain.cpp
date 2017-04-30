@@ -21,7 +21,7 @@ void mat2DImage(cv::Mat srcMat, DImage& dstDImage){
 	}
 	for (int i = 0; i < height; i++){
 		for (int j = 0; j < width; j++){
-			dstDImage.pData[i*width + j] = srcMat.at<double>(i, j);
+			dstDImage.pData[i*width + j] = srcMat.at<uchar>(i, j);
 		}
 	}
 }

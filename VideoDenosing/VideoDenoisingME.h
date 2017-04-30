@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <windows.h> 
 
-#include"NLM.h"
+//#include"NLM.h"
 #include"AKNN.h"
 
 using namespace std;
@@ -56,7 +56,7 @@ private:
 		}
 		for (int i = 0; i < height; i++){
 			for (int j = 0; j < width; j++){
-				dstDImage.pData[i*width+j] = srcMat.at<double>(i, j);
+				dstDImage.pData[i*width+j] = srcMat.at<uchar>(i, j);
 			}
 		}
 	}
