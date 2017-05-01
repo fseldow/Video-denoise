@@ -81,7 +81,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AKNN.h" />
+    <ClInclude Include="AKNN.hpp" />
     <ClInclude Include="mex\GaussianPyramid.h" />
     <ClInclude Include="mex\Image.h" />
     <ClInclude Include="mex\ImageIO.h" />
@@ -91,10 +91,11 @@
     <ClInclude Include="mex\OpticalFlow.h" />
     <ClInclude Include="mex\project.h" />
     <ClInclude Include="mex\Stochastic.h" />
+    <ClInclude Include="NLM.hpp" />
+    <ClInclude Include="nlmeans_denoising_commons.hpp" />
     <ClInclude Include="VideoDenoisingME.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AKNN.cpp" />
     <ClCompile Include="mex\GaussianPyramid.cpp" />
     <ClCompile Include="mex\OpticalFlow.cpp" />
     <ClCompile Include="mex\Stochastic.cpp" />

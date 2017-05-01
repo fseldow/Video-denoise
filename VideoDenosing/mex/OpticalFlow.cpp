@@ -286,7 +286,7 @@ void OpticalFlow::SmoothFlowSOR(const DImage &Im1, const DImage &Im2, DImage &wa
 		
 			double _a  = 10000, _b = 0.1;
 			if(nChannels==1)
-///#pragma omp parallel for
+
 				for(int i=0;i<nPixels;i++)
 				{
 					temp=imdtData[i]+imdxData[i]*duData[i]+imdyData[i]*dvData[i];
@@ -314,7 +314,7 @@ void OpticalFlow::SmoothFlowSOR(const DImage &Im1, const DImage &Im2, DImage &wa
 					}
 				}
 			else
-//#pragma omp parallel for
+
 				for(int i=0;i<nPixels;i++)
 					for(int k=0;k<nChannels;k++)
 					{
@@ -949,12 +949,12 @@ void OpticalFlow::Coarse2FineFlow(DImage &vx, DImage &vy, DImage &warpI2,const D
 	// first build the pyramid of the two images
 	GaussianPyramid GPyramid1;
 	GaussianPyramid GPyramid2;
-	if(IsDisplay)
-		cout<<"Constructing pyramid...";
+	/*if(IsDisplay)
+		cout<<"Constructing pyramid...";*/
 	GPyramid1.ConstructPyramid(Im1,ratio,minWidth);
 	GPyramid2.ConstructPyramid(Im2,ratio,minWidth);
-	if(IsDisplay)
-		cout<<"done!"<<endl;
+	/*if(IsDisplay)
+		cout<<"done!"<<endl;*/
 	
 	// now iterate from the top level to the bottom
 	DImage Image1,Image2,WarpImage2;
@@ -974,8 +974,8 @@ void OpticalFlow::Coarse2FineFlow(DImage &vx, DImage &vy, DImage &warpI2,const D
 
 	for(int k=GPyramid1.nlevels()-1;k>=0;k--)
 	{
-		if(IsDisplay)
-			cout<<"Pyramid level "<<k;
+		/*if(IsDisplay)
+			cout<<"Pyramid level "<<k;*/
 		int width=GPyramid1.Image(k).width();
 		int height=GPyramid1.Image(k).height();
 		im2feature(Image1,GPyramid1.Image(k));
@@ -1013,8 +1013,8 @@ void OpticalFlow::Coarse2FineFlow(DImage &vx, DImage &vy, DImage &warpI2,const D
 		//cout << "smoothFlowSor: "<<end - start << endl;
 
 		//GMPara.display();
-		if(IsDisplay)
-			cout<<endl;
+		/*if(IsDisplay)
+			cout<<endl;*/
 	}
 	//warpFL(warpI2,Im1,Im2,vx,vy);
 	Im2.warpImageBicubicRef(Im1,warpI2,vx,vy);

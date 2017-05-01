@@ -10,7 +10,8 @@
 #include <windows.h> 
 
 //#include"NLM.h"
-#include"AKNN.h"
+#include"AKNN.hpp"
+#include"NLM.hpp"
 
 using namespace std;
 //using namespace cv;
@@ -37,14 +38,12 @@ class VideoDenoisingME{
 
 public:
 	VideoDenoisingME();
-	int processing(vector<cv::Mat>&dstFrames, string videoName, string storeName, int K, int H, int lenPatch);
-	void videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOut, int _K, int temporalWindowSize, int searchWindowSize);
-private:
-	void singalChannelHandle(vector<cv::Mat>&dstFrames);
-	void multiChannelHandle(vector<cv::Mat>&dstFrames);
-	double getSigma_t(cv::Mat src_t, cv::Mat src_f, DImage vx, DImage vy);
-	double weightedSSD(cv::Point3i p, cv::Point3i q, vector<cv::Mat>frames);
+	int processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFrames, int K, int temporalWindowSize, int patchWindowSize);
+	void videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOut,vector<DImage>vx,vector<DImage>vy, int _K, int temporalWindowSize, int patchWindowSize);
 
+	//template<class T>
+
+private:
 	void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
 		int width = srcMat.cols;
 		int height = srcMat.rows;
@@ -62,4 +61,3 @@ private:
 	}
 };
 
-extern VideoDenoisingME mVideoDenoisingME;

@@ -1,10 +1,78 @@
-# include "AKNN.h"
+//# include "AKNN.h"
 
-AKNN::AKNN(const cv::Mat &src, ImgKNN &_knnf)
+#include "cv.h"
+#include "highgui.h"
+//#include"nlmeans_denoising_commons.hpp";
+//#include"mex\OpticalFlow.h"
+#include <math.h>
+#include <iostream>
+#include <windows.h> 
+#include<ctime>
+
+using namespace std;
+//using namespace cv;
+
+# define ALPHA   0.5
+# define NUMMOD  1000
+
+
+
+struct NeighborPatch{
+	cv::Point2i p;
+	long distance;
+	NeighborPatch(cv::Point2i mP, long mDistance){
+		p = mP; distance = mDistance;
+	}
+};
+
+typedef vector<NeighborPatch> KNN;
+typedef KNN ** ImgKNN;
+
+
+template <typename T>
+struct AKNN{
+private:
+	cv::Mat imgDst;                         //img in certain flame
+	const cv::Mat &imgSrc;                      //img with original patch
+
+	int K;                           //K nearest neighbors
+	int S;                           //half edge of searching patch
+
+	double sigma;
+
+	int nSrcRows;
+	int nSrcCols;
+	int nDstRows;
+	int nDstCols;
+
+	cv::Point2i **NNF;
+	long **offset;
+	ImgKNN &KNNF;
+
+public:
+	AKNN(const cv::Mat &src, ImgKNN &_knnf);
+	~AKNN();
+	int getV(int K, int lenPatch);
+	void setDst(cv::Mat &dst);
+
+private:
+	void initation();
+	void progagation(cv::Point2i patch, int odd);
+	void randomSearch(cv::Point2i pSrc, cv::Point2i nnf);
+	void handleQueue(KNN &knn, NeighborPatch);
+	void operation();
+	double calculateDistance(cv::Point2i pDst, cv::Point2i pSrc);
+	double calculateDistance(cv::Mat q, cv::Mat p);
+	cv::Point2d generateNormal2dVector();
+	int getMinIndex(double a, double b, double c);
+};
+
+template <class T>
+AKNN<T>::AKNN(const cv::Mat &src, ImgKNN &_knnf)
 : imgSrc(src),KNNF( _knnf)
 {
 	
-
+	
 	nSrcCols = src.cols;
 	nSrcRows = src.rows;
 
@@ -14,17 +82,19 @@ AKNN::AKNN(const cv::Mat &src, ImgKNN &_knnf)
 
 	
 	NNF = new cv::Point2i *[nSrcCols];
-	offset = new double *[nSrcCols];
+	offset = new long *[nSrcCols];
 	KNNF = new KNN *[nSrcCols];
 	for (int i = 0; i < nSrcCols; i++){
 		NNF[i] = new cv::Point2i[nSrcRows];
 		KNNF[i] = new KNN[nSrcRows];
-		offset[i] = new double[nSrcRows];
+		offset[i] = new long[nSrcRows];
 	}
 
 	srand(time(0));
 }
-AKNN::~AKNN(){
+
+template <class T>
+AKNN<T>::~AKNN(){
 	cout << "release" << endl;
 	//double startRelease = getTickCount();
 #pragma omp parallel for
@@ -42,7 +112,8 @@ AKNN::~AKNN(){
 	//cout << "cleared " <<endRelease-startRelease<< endl;
 }
 
-int AKNN::getV(int K, int lenPatch){
+template <class T>
+int AKNN<T>::getV(int K, int lenPatch){
 	this->K = K;
 	this->S = (lenPatch - 1) / 2;
 
@@ -51,7 +122,8 @@ int AKNN::getV(int K, int lenPatch){
 	return 0;
 }
 
-void AKNN::setDst(cv::Mat &_dst){
+template <class T>
+void AKNN<T>::setDst(cv::Mat &_dst){
 	
 	nDstCols = _dst.cols;
 	nDstRows = _dst.rows;
@@ -59,8 +131,8 @@ void AKNN::setDst(cv::Mat &_dst){
 	imgDst = _dst;
 }
 
-
-void AKNN::operation(){
+template <class T>
+void AKNN<T>::operation(){
 
 	int maxIteration = 4;
 	int odd;
@@ -120,8 +192,8 @@ void AKNN::operation(){
 }
 
 
-
-void AKNN::initation(){
+template <class T>
+void AKNN<T>::initation(){
 	
 #pragma omp parallel for 
 	for (int x = S; x < nSrcCols - S; x++){
@@ -141,7 +213,9 @@ void AKNN::initation(){
 	
 }
 
-void AKNN::progagation(cv::Point2i patch, int odd){
+
+template <class T>
+void AKNN<T>::progagation(cv::Point2i patch, int odd){
 	int x = patch.x;
 	int y = patch.y;
 	
@@ -177,7 +251,7 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 				- calculateDistance(nonLapping.row(2), nonLapping.row(0))
 				+ calculateDistance(nonLapping.row(3), nonLapping.row(1));
 
-\
+
 			KNNF[patch.x][patch.y].insert(KNNF[patch.x][patch.y].begin(), NeighborPatch(NNF[x][y], offset[x][y]));
 			KNNF[patch.x][patch.y].pop_back();
 			break;
@@ -293,7 +367,9 @@ void AKNN::progagation(cv::Point2i patch, int odd){
 	
 }
 
-void AKNN::randomSearch(cv::Point2i pSrc, cv::Point2i nnf){
+
+template <class T>
+void AKNN<T>::randomSearch(cv::Point2i pSrc, cv::Point2i nnf){
 	int M = min(log2(sigma), K*1.0);
 	cv::Point2d n;
 	cv::Point2i v, p;
@@ -324,13 +400,16 @@ void AKNN::randomSearch(cv::Point2i pSrc, cv::Point2i nnf){
 	return;
 }
 
-double AKNN::calculateDistance(cv::Point2i pDst, cv::Point2i pSrc){
+
+template <class T>
+double AKNN<T>::calculateDistance(cv::Point2i pDst, cv::Point2i pSrc){
 	cv::Mat matDst = imgDst(cv::Rect(pDst.x - S, pDst.y - S, 2 * S + 1, 2 * S + 1));
 	cv::Mat matSrc = imgSrc(cv::Rect(pSrc.x - S, pSrc.y - S, 2 * S + 1, 2 * S + 1));
 	return calculateDistance(matDst, matSrc);
 }
 
-double AKNN::calculateDistance(cv::Mat q, cv::Mat p){
+template <class T>
+double AKNN<T>::calculateDistance(cv::Mat q, cv::Mat p){
 	double result = 0.0;
 	for (int i = 0; i < q.rows; i++){
 		for (int j = 0; j < q.cols; j++){
@@ -340,7 +419,8 @@ double AKNN::calculateDistance(cv::Mat q, cv::Mat p){
 	return result;
 }
 
-void AKNN::handleQueue(KNN &knn, NeighborPatch mNeighborPatch){
+template <class T>
+void AKNN<T>::handleQueue(KNN &knn, NeighborPatch mNeighborPatch){
 	if (knn.size() == 0){
 		knn.push_back(mNeighborPatch);
 		return;
@@ -361,10 +441,12 @@ void AKNN::handleQueue(KNN &knn, NeighborPatch mNeighborPatch){
 	}
 	knn.insert(knn.begin() + middle, mNeighborPatch);
 	while (knn.size() > K)knn.pop_back();                 //保证K个最邻
-	return;
+	
 }
 
-cv::Point2d AKNN::generateNormal2dVector(){
+
+template <class T>
+cv::Point2d AKNN<T>::generateNormal2dVector(){
 	double x = rand() % NUMMOD - NUMMOD / 2;
 	double y = rand() % NUMMOD - NUMMOD / 2;
 	double value = pow(x*x + y*y,0.5);
@@ -373,8 +455,8 @@ cv::Point2d AKNN::generateNormal2dVector(){
 	return cv::Point2d(x, y);
 }
 
-
-int AKNN::getMinIndex(double a, double b, double c){
+template <class T>
+int AKNN<T>::getMinIndex(double a, double b, double c){
 	if (a<=b){
 		if (a <= c)return 1;
 		return 3;
