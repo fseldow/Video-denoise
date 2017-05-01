@@ -48,14 +48,22 @@ private:
 		int width = srcMat.cols;
 		int height = srcMat.rows;
 		if (dstDImage.height() == 0 && dstDImage.width() == 0){
-			dstDImage.allocate(width, height);
+			dstDImage.allocate(width, height, srcMat.channels());
 		}
 		else{
 			dstDImage.imresize(width, height);
 		}
 		for (int i = 0; i < height; i++){
 			for (int j = 0; j < width; j++){
-				dstDImage.pData[i*width+j] = srcMat.at<uchar>(i, j);
+				int nPixel = i*width + j;
+				if (srcMat.channels()>1){
+					for (int c = 0; c < srcMat.channels(); c++){
+						dstDImage.pData[nPixel*srcMat.channels() + c] = srcMat.at<cv::Vec3b>(i, j)[c]/255.0;
+					}
+				}
+				else{
+					dstDImage.pData[i*width + j] = srcMat.at<uchar>(i, j)/255.0;
+				}
 			}
 		}
 	}

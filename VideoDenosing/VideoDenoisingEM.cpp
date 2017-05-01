@@ -27,8 +27,12 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 	vector<DImage>vyFlow;
 
 
-	double alpha=1, ratio=0.7;
-	int minWidth=30, nOuterFPIterations=15, nInnerFPIterations=1, nCGIterations=40;
+	double alpha = 0.012;
+	double ratio=0.7;
+	int minWidth = 20;
+	int nOuterFPIterations = 7;
+	int nInnerFPIterations = 1;
+	int nCGIterations = 30;
 
 	cv::Mat resultTemp;
 
@@ -42,6 +46,7 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 			mat2DImage(srcFrames[n_frame - 1], pre);
 			mat2DImage(srcFrames[n_frame], cur);
 			OpticalFlow::Coarse2FineFlow(vx, vy, warp, pre, cur, alpha, ratio, minWidth, nOuterFPIterations, nInnerFPIterations, nCGIterations);
+			double end = GetTickCount();
 			vxFlow.push_back(vx);
 			vyFlow.push_back(vy);
 		}
@@ -53,9 +58,11 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 	}
 	double end = GetTickCount();
 	cout << end - start << endl;
+	cv::imwrite("resultTest.jpg",resultTemp);
 	cv::imshow("test", resultTemp);
 	cv::waitKey();
 	for (int n_frame = 0; n_frame < videoSize - temporalWindowSize; n_frame++){
+		cout <<"frame:"<< n_frame + temporalWindowSize << endl;
  		operateFrames.erase(operateFrames.begin());
 		operateFrames.push_back(srcFrames[n_frame + temporalWindowSize]);
 

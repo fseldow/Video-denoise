@@ -2516,7 +2516,7 @@ void Image<T>::warpImageBicubicRef(const Image<T>& ref,Image<T>& output,const Im
 		ImgMax = 1;
 	else
 		ImgMax = 255;
-#pragma omp parallel for
+
 	for(int i  = 0; i<height; i++)
 		for(int j = 0;j<width;j++)
 		{

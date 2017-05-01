@@ -10,34 +10,53 @@ using namespace std;
 
 
 
-void mat2DImage(cv::Mat srcMat, DImage& dstDImage){
+void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
 	int width = srcMat.cols;
 	int height = srcMat.rows;
 	if (dstDImage.height() == 0 && dstDImage.width() == 0){
-		dstDImage.allocate(width, height);
+		dstDImage.allocate(width, height, srcMat.channels());
 	}
 	else{
 		dstDImage.imresize(width, height);
 	}
 	for (int i = 0; i < height; i++){
 		for (int j = 0; j < width; j++){
-			dstDImage.pData[i*width + j] = srcMat.at<uchar>(i, j);
+			int nPixel = i*width + j;
+			if (srcMat.channels()>1){
+				for (int c = 0; c < srcMat.channels(); c++){
+					dstDImage.pData[nPixel*srcMat.channels() + c] = srcMat.at<cv::Vec3b>(i, j)[c]/255.0;
+				}
+			}
+			else{
+				dstDImage.pData[i*width + j] = srcMat.at<uchar>(i, j)/255.0;
+			}
 		}
 	}
 }
 
 int main(){
 
+	//test Optical Flow
+	cv::Mat frame1, frame2;
+	frame1 = cv::imread("frame_large1.jpg");
+	frame2 = cv::imread("frame_large2.jpg");
+	DImage pre, cur, warp,vx,vy;
+	mat2DImage(frame1, pre);
+	mat2DImage(frame2, cur);
+	double alpha = 0.012;
+	double ratio = 0.75;
+	int minWidth = 20;
+	int nOuterFPIterations = 7;
+	int nInnerFPIterations = 1;
+	int nCGIterations = 30;
+	OpticalFlow::Coarse2FineFlow(vx, vy, warp, pre, cur, alpha, ratio, minWidth, nOuterFPIterations, nInnerFPIterations, nCGIterations);
+	
 
-
-	//vector<cv::Mat>frames;
-	//VideoDenoisingME b;
-	//b.processing(frames,"E:\\C++\\video1.mp4", "aa", 11, 5, 7);
 
 	double start = GetTickCount();
 	vector<cv::Mat> test;
 	cv::Mat result;
-	cv::VideoCapture capture("E:\\C++\\video1_poor.mp4");
+	cv::VideoCapture capture("E:\\C++\\video1.mp4");
 	cv::Mat frame;
 	capture >> frame;
 	capture >> frame;
