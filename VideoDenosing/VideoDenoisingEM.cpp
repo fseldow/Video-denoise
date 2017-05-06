@@ -6,7 +6,7 @@ VideoDenoisingME::VideoDenoisingME(){
 
 int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFrames, int K, int temporalWindowSize, int patchWindowSize)
 {
-	cv::VideoCapture capture("E:\\C++\\video1_poor.mp4");
+	cv::VideoCapture capture("E:\\C++\\video1.avi");
 	double fps = capture.get(CV_CAP_PROP_FPS);
 	//获得原始视频的高度和宽度
 	cv::Size size(capture.get(CV_CAP_PROP_FRAME_WIDTH), capture.get(CV_CAP_PROP_FRAME_HEIGHT));
@@ -40,8 +40,17 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 	for (int n_frame = 0; n_frame < temporalWindowSize; n_frame++){
 		cout << "frame : " << n_frame + 1 << endl;
 		operateFrames.push_back(srcFrames[n_frame]);
+
 		
 		if (n_frame>0){
+			////test for estimate
+			//if (n_frame !=3* H + 1){
+			//	DImage pre, cur, warp, vx, vy;
+			//	vxFlow.push_back(vx);
+			//	vyFlow.push_back(vy);
+			//	continue;
+			//}
+
 			DImage pre, cur, warp, vx, vy;
 			mat2DImage(srcFrames[n_frame - 1], pre);
 			mat2DImage(srcFrames[n_frame], cur);
@@ -58,9 +67,9 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 	}
 	double end = GetTickCount();
 	cout << end - start << endl;
-	cv::imwrite("resultTest.jpg",resultTemp);
-	cv::imshow("test", resultTemp);
-	cv::waitKey();
+	//cv::imwrite("resultTest.jpg",resultTemp);
+	//cv::imshow("test", resultTemp);
+	//cv::waitKey();
 	for (int n_frame = 0; n_frame < videoSize - temporalWindowSize; n_frame++){
 		cout <<"frame:"<< n_frame + temporalWindowSize << endl;
  		operateFrames.erase(operateFrames.begin());
@@ -77,6 +86,11 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 
 		videoDenoising(operateFrames, resultTemp, vxFlow, vyFlow, K, temporalWindowSize, patchWindowSize);
 		dstFrames.push_back(resultTemp);
+
+		/*cv::imwrite("resultTest.jpg",resultTemp);
+		cv::imshow("test", resultTemp);
+		cv::waitKey();*/
+
 		writer.write(resultTemp);
 	}
 	return 0;

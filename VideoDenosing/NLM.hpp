@@ -24,6 +24,7 @@ public:
 	int operation();
 private:
 	void estimateNoise(double *result,cv::Mat src_t, cv::Mat src_f, DImage vx, DImage vy);
+	void estimateNoise2(double *result, cv::Mat src_t);
 	double weightedSSD(cv::Point3i p, cv::Point3i q, vector<cv::Mat>_frames);
 
 };
@@ -35,6 +36,8 @@ NLM<T>::NLM(vector<cv::Mat>_srcFrames, cv::Mat&dstFrames, int _K, int _temporalW
 	if (framesOut.empty()){
 		framesOut.create(srcFrames[0].size(), srcFrames[0].type());
 	}
+	
+	
 	this->width = srcFrames[0].cols;
 	this->height = srcFrames[0].rows;
 	this->H = _temporalWindowSize / 2;
@@ -43,6 +46,8 @@ NLM<T>::NLM(vector<cv::Mat>_srcFrames, cv::Mat&dstFrames, int _K, int _temporalW
 	this->patchWindowSize = S * 2 + 1;
 
 	this->sigma_p = S / 2.0;
+
+	srcFrames[H].copyTo(framesOut);
 }
 
 
@@ -52,7 +57,8 @@ int NLM<T>:: operation(){
 	//estimate noise
 	//--------------------------------------------------------------------------------
 	double sigma_t[3] = { 0 };
-	estimateNoise(sigma_t,srcFrames[H], srcFrames[H + 1], vxFlow[H], vyFlow[H]);
+	//estimateNoise(sigma_t, srcFrames[H], srcFrames[H + 1], vxFlow[H], vyFlow[H]);
+	estimateNoise2(sigma_t,srcFrames[H]);
 
 	//--------------------------------------------------------------------------------
 	//AKNN
@@ -163,11 +169,12 @@ template<class T>
 void NLM<T>::estimateNoise(double *sigma_t,cv::Mat src_t, cv::Mat src_f, DImage vx, DImage vy){
 	//double sigma_t[3];
 	for (int i = 0; i < sizeof(T); i++){
-		double sigma_n = 20;
+		double sigma_n = 1;
 		double J;
 		double sigma_temp1, sigma_temp2, preSigma_n = 0;
 		cv::Mat alfa(cv::Size(width, height), CV_64FC1);
-
+		//cv::Mat J(cv::Size(width, height), CV_8U);
+		
 		while (abs(sigma_n - preSigma_n)>0.1){
 			//while (1){
 			preSigma_n = sigma_n;
@@ -181,13 +188,48 @@ void NLM<T>::estimateNoise(double *sigma_t,cv::Mat src_t, cv::Mat src_f, DImage 
 					if (pNeighbor.x < 0 || pNeighbor.y < 0 || pNeighbor.x >= width || pNeighbor.y >= height)continue;
 					J = calcDiff(src_t.at<T>(z) ,src_f.at<T>(pNeighbor),i);
 					alfa.at<double>(z) = exp(-J / (2 * sigma_n*sigma_n)) / (exp(-J / (2 * sigma_n*sigma_n)) + 0.5*sigma_n*pow(2 * PI, 0.5));
+					double temp = alfa.at<double>(z);
 					sigma_temp1 += J*J*alfa.at<double>(z);
 					sigma_temp2 += alfa.at<double>(z);
 				}
 			}
 			sigma_n = pow(sigma_temp1 / sigma_temp2, 0.5);
 		}
-		sigma_t[i]= sigma_n;
+		sigma_t[i] = sigma_n;
+	}
+}
+
+template<class T>
+void NLM<T>::estimateNoise2(double *sigma_t, cv::Mat src_t){
+	//double sigma_t[3];
+	for (int i = 0; i < sizeof(T); i++){
+		double sigma_n = 1;
+		double J;
+		double sigma_temp1, sigma_temp2, preSigma_n = 0;
+		//cv::Mat J(cv::Size(width, height), CV_8U);
+
+		//while (abs(sigma_n - preSigma_n)>0.1){
+			//while (1){
+			preSigma_n = sigma_n;
+			sigma_temp1 = 0;
+			sigma_temp2 = 0;
+			int count = 0;
+			for (int x = 0; x < width; x++){
+				for (int y = 0; y < height; y++){
+					cv::Point2i z(x, y);
+					//cv::Point2i pNeighbor(x + vx.pData[y*width + x], y + vy.pData[y*width + x]);
+					//if (pNeighbor.x < 0 || pNeighbor.y < 0 || pNeighbor.x >= width || pNeighbor.y >= height)continue;
+					J = getPixelValue(src_t.at<T>(z),i); //calcDiff(src_t.at<T>(z), src_f.at<T>(pNeighbor), i);
+					sigma_temp1 += J;
+					sigma_temp2 += J*J;
+					count++;
+				}
+			}
+			sigma_temp1 /= count;
+			sigma_temp2 /= count;
+			sigma_n =  pow(sigma_temp2-sigma_temp1*sigma_temp1,0.5);
+		//}
+		sigma_t[i] = sigma_n;
 	}
 }
 

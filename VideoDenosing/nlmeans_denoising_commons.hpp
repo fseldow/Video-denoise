@@ -37,6 +37,20 @@ template <> inline int calcDiff(const cv::Vec3b a, const cv::Vec3b b, int index)
 
 
 
+template <typename T> static inline int getPixelValue(const T a,  int index);
+
+template <> inline int getPixelValue(const uchar a,  int index) {
+	return a;
+}
+
+template <> inline int getPixelValue(const cv::Vec2b a,  int index) {
+	return (a[index] );
+}
+
+template <> inline int getPixelValue(const cv::Vec3b a,  int index) {
+	return (a[index] );
+}
+
 
 
 template <typename T> static inline void incWithWeight(double* estimation, double* weight, T p);
