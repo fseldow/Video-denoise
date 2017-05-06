@@ -2,6 +2,10 @@
 #include"mex\OpticalFlow.h"
 #include"nlmeans_denoising_commons.hpp"
 
+
+const double Gama = 0.9;
+
+
 template <typename T>
 class NLM{
 	int temporalWindowSize;
@@ -57,16 +61,19 @@ int NLM<T>:: operation(){
 	//estimate noise
 	//--------------------------------------------------------------------------------
 	double sigma_t[3] = { 0 };
-	//estimateNoise(sigma_t, srcFrames[H], srcFrames[H + 1], vxFlow[H], vyFlow[H]);
-	estimateNoise2(sigma_t,srcFrames[H]);
+	double start = GetTickCount();
+	estimateNoise(sigma_t, srcFrames[H], srcFrames[H + 1], vxFlow[H], vyFlow[H]);
+	//estimateNoise2(sigma_t,srcFrames[H]);
 
 	//--------------------------------------------------------------------------------
 	//AKNN
 	//--------------------------------------------------------------------------------
+	cout << "start searching neighbor patch" << endl;
 	AKNN<T> mAKNN(srcFrames[H],KNNF);
 	mAKNN.setDst(srcFrames[H]);
 	mAKNN.getV(K, patchWindowSize);
-
+	double end= GetTickCount();
+	cout <<"extra use time :"<< end - start << endl;
 	//--------------------------------------------------------------------------------
 	//NLM
 	//--------------------------------------------------------------------------------
@@ -112,7 +119,7 @@ int NLM<T>:: operation(){
 					double Dw = weightedSSD(neighbor, p, srcFrames);
 					double weight[3];
 					for (int i = 0; i < sizeof(T); i++){
-						weight[i] = pow(0.9, abs(f - H)) * exp(-(Dw / (2 * sigma_t[i] * sigma_t[i])));
+						weight[i] = pow(Gama, abs(f - H)) * exp(-(Dw / (2 * sigma_t[i] * sigma_t[i])));
 						Z[i] += weight[i];
 					}
 					incWithWeight(I, weight, srcFrames[f].at<T>(neighbor.y, neighbor.x));
@@ -132,7 +139,7 @@ int NLM<T>:: operation(){
 					double Dw = weightedSSD(neighbor, p, srcFrames);
 					double weight[3];
 					for (int i = 0; i < sizeof(T); i++){
-						weight[i] = pow(0.9, abs(f - H)) * exp(-(Dw / (2 * sigma_t[i] * sigma_t[i])));
+						weight[i] = pow(Gama, abs(f - H)) * exp(-(Dw / (2 * sigma_t[i] * sigma_t[i])));
 						Z[i] += weight[i];
 					}
 					incWithWeight(I, weight, srcFrames[f].at<T>(neighbor.y, neighbor.x));
@@ -195,7 +202,7 @@ void NLM<T>::estimateNoise(double *sigma_t,cv::Mat src_t, cv::Mat src_f, DImage 
 			}
 			sigma_n = pow(sigma_temp1 / sigma_temp2, 0.5);
 		}
-		sigma_t[i] = sigma_n;
+		sigma_t[i] = sigma_n*sizeof(T);
 	}
 }
 

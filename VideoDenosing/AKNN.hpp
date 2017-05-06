@@ -34,10 +34,10 @@ template <typename T>
 struct AKNN{
 private:
 	cv::Mat imgDst;                         //img in certain flame
-	const cv::Mat &imgSrc;                      //img with original patch
+	const cv::Mat &imgSrc;                  //img with original patch
 
-	int K;                           //K nearest neighbors
-	int S;                           //half edge of searching patch
+	int K;                                  //K nearest neighbors
+	int S;                                  //half edge of searching patch
 
 	double sigma;
 
@@ -78,8 +78,6 @@ AKNN<T>::AKNN(const cv::Mat &src, ImgKNN &_knnf)
 	nSrcRows = src.rows;
 
 
-
-	cout << "start new" << endl;
 
 
 	NNF = new cv::Point2i *[nSrcCols];
@@ -175,24 +173,6 @@ void AKNN<T>::operation(){
 				}
 			}
 		}
-		//if (odd){
-		//	for (int x = 700; x <= 850; x++){
-		//		for (int y = 50; y <= 200; y++){
-		//			//cout << "progagation..." << endl;
-		//			progagation(cv::Point2i(x, y), odd);
-		//			//cout << "randomSearch..." << endl;
-		//			randomSearch(cv::Point2i(x, y), NNF[x][y]);
-		//		}
-		//	}
-		//}
-		//else{
-		//	for (int x = 850; x >= 700; x--){
-		//		for (int y = 200; y >= 50; y--){
-		//			progagation(cv::Point2i(x, y), odd);
-		//			randomSearch(cv::Point2i(x, y), NNF[x][y]);
-		//		}
-		//	}
-		//}
 	}
 }
 

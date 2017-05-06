@@ -9,42 +9,56 @@
 #include <stdio.h>
 #include <windows.h> 
 
-//#include"NLM.h"
+
 #include"AKNN.hpp"
 #include"NLM.hpp"
 
 using namespace std;
 //using namespace cv;
 
-#define GAMA 0.9
+
 
 #ifndef PI
 #define PI 3.1415926
 #endif
 
 class VideoDenoisingME{
-	
-
-	string videoName;
-	vector<cv::Mat>frames;
-	int width;
-	int height;
-	int H;
-	int S;
-	int K;
-
-	float gama;
-	float sigma_p;
 
 public:
 	VideoDenoisingME();
-	int processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFrames, int K, int temporalWindowSize, int patchWindowSize);
-	void videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOut,vector<DImage>vx,vector<DImage>vy, int _K, int temporalWindowSize, int patchWindowSize);
+	//fun to denoise structured noise
+	static int processing(
+		vector<cv::Mat>srcFrames,
+		vector<cv::Mat>&dstFrames,
+		int K,
+		int temporalWindowSize,
+		int patchWindowSize
+		);
 
-	//template<class T>
+	//size of framesSrc must equal to temporalWindowSize, image type should be uchar,  1-3 channels
+	static void videoDenoising(
+		vector<cv::Mat>framesSrc,
+		cv::Mat&framesOut,
+		vector<DImage>vx,
+		vector<DImage>vy, 
+		int _K, 
+		int temporalWindowSize, 
+		int patchWindowSize
+		);
+
+	
+	static void videoDenoising(
+		vector<cv::Mat>framesSrc,
+		cv::Mat&framesOut,
+		int _K,
+		int temporalWindowSize,
+		int patchWindowSize
+		);
+
 
 private:
-	void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
+	//convert mat to DImage
+	static void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
 		int width = srcMat.cols;
 		int height = srcMat.rows;
 		if (dstDImage.height() == 0 && dstDImage.width() == 0){
