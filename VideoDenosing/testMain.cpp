@@ -38,11 +38,11 @@ int main(){
 	double start = GetTickCount();
 	vector<cv::Mat> test;
 	cv::Mat result;
-	cv::VideoCapture capture("E:\\C++\\video1.avi");
+	cv::VideoCapture capture("E:\\source.avi");
 
 	double fps = capture.get(CV_CAP_PROP_FPS);
 	cv::Size size(capture.get(CV_CAP_PROP_FRAME_WIDTH), capture.get(CV_CAP_PROP_FRAME_HEIGHT));
-	cv::VideoWriter writer("E:\\C++\\poor_result.avi", CV_FOURCC('M', 'J', 'P', 'G'), fps, size);
+	cv::VideoWriter writer("E:\\C++\\result.avi", CV_FOURCC('M', 'J', 'P', 'G'), fps, size);
 
 
 	while(1){
