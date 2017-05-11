@@ -95,4 +95,31 @@ template <> inline cv::Vec3b saturateCastFromArray(double* estimation) {
 	return res;
 }
 
+
+template <typename T> static inline T removeErrBlack(T ori,T est);
+
+template <> inline uchar removeErrBlack(uchar ori, uchar est) {
+	if (est == 0 && ori != 0)return ori;
+	return est;
+}
+
+template <> inline cv::Vec2b removeErrBlack(cv::Vec2b ori, cv::Vec2b est) {
+	cv::Vec2b res;
+	for (int i = 0; i < 2; i++){
+		if (est[i] == 0 && ori[i] != 0)res[i]=ori[i];
+		else res[i] = est[i];
+	}
+	return res;
+}
+
+template <> inline cv::Vec3b removeErrBlack(cv::Vec3b ori, cv::Vec3b est) {
+	cv::Vec3b res;
+	for (int i = 0; i < 3; i++){
+		if (est[i] == 0 && ori[i] != 0)res[i] = ori[i];
+		else res[i] = est[i];
+	}
+	return res;
+}
+
+
 #endif

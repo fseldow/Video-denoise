@@ -149,7 +149,8 @@ int NLM<T>:: operation(){
 			for (int i = 0; i < sizeof(T); i++){
 				I[i] /= Z[i];
 			}
-			framesOut.at<T>(y, x) = saturateCastFromArray<T>(I);
+			T temp = saturateCastFromArray<T>(I);
+			framesOut.at<T>(y, x) = removeErrBlack<T>(srcFrames[H].at<T>(y, x),temp);
 		}
 	}
 	double NLMend = GetTickCount();

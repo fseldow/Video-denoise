@@ -13,6 +13,8 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 	int width = srcFrames[0].cols;
 	int height = srcFrames[0].rows;
 
+	int border = S + 2;
+
 	int videoSize = srcFrames.size();
 	vector<cv::Mat>operateFrames;          //vector mat keeps newest 2H+1 frames
 	vector<DImage>vxFlow;                  //vector DImage keeps newest 2H optical flow data for x dir
@@ -26,41 +28,51 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 	int nInnerFPIterations = 1;
 	int nCGIterations = 30;
 
-	cv::Mat resultTemp;                    //denoised pic
+	
 
 	double start = GetTickCount();
 
 	//calculate the first 2H optical flow data
 	for (int n_frame = 0; n_frame < temporalWindowSize; n_frame++){
 		cout << "frame : " << n_frame + 1 << endl;
-		operateFrames.push_back(srcFrames[n_frame]);
+		
+		cv::Mat mExtentMat;
+		extentMat(srcFrames[n_frame], mExtentMat, border);
+		operateFrames.push_back(mExtentMat);
 
 		
 		if (n_frame>0){
 			DImage pre, cur, warp, vx, vy;
-			mat2DImage(srcFrames[n_frame - 1], pre);
-			mat2DImage(srcFrames[n_frame], cur);
+			mat2DImage(operateFrames[n_frame - 1], pre);
+			mat2DImage(operateFrames[n_frame], cur);
 			OpticalFlow::Coarse2FineFlow(vx, vy, warp, pre, cur, alpha, ratio, minWidth, nOuterFPIterations, nInnerFPIterations, nCGIterations);
+			double a=vx.pData[308100];
 			vxFlow.push_back(vx);
 			vyFlow.push_back(vy);
 		}
 	}
 	//handle the first 2H+1 frames
 	{
+		cv::Mat resultTemp;                    //denoised pic
 		videoDenoising(operateFrames, resultTemp, vxFlow, vyFlow, K, temporalWindowSize, patchWindowSize);
-		dstFrames.push_back(resultTemp);
-		
+		cv::Mat result;
+		centerMat(resultTemp, result, border);
+		dstFrames.push_back(result);
+		/*cv::imwrite("resultTest.jpg", result);
+		cv::imshow("test", result);
+		cv::waitKey();*/
+
 	}
 
 	double end = GetTickCount();
 	cout << end - start << endl;
-	/*cv::imwrite("resultTest.jpg",resultTemp);
-	cv::imshow("test", resultTemp);
-	cv::waitKey();*/
+	
 	for (int n_frame = 0; n_frame < videoSize - temporalWindowSize; n_frame++){
 		cout <<"frame:"<< n_frame + temporalWindowSize+1 << endl;
  		operateFrames.erase(operateFrames.begin());
-		operateFrames.push_back(srcFrames[n_frame + temporalWindowSize]);
+		cv::Mat mExtentMat;
+		extentMat(srcFrames[n_frame + temporalWindowSize], mExtentMat, border);
+		operateFrames.push_back(mExtentMat);
 
 		DImage pre, cur, warp,vx,vy;
 		mat2DImage(operateFrames[operateFrames.size() - 2], pre);
@@ -71,8 +83,12 @@ int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFr
 		vyFlow.erase(vyFlow.begin());
 		vyFlow.push_back(vy);
 
+		cv::Mat resultTemp;                    //denoised pic
 		videoDenoising(operateFrames, resultTemp, vxFlow, vyFlow, K, temporalWindowSize, patchWindowSize);
-		dstFrames.push_back(resultTemp);
+		cv::Mat result;
+		centerMat(resultTemp, result, border);
+		resultTemp.release();
+		dstFrames.push_back(result);
 	}
 	return 0;
 }
@@ -123,6 +139,8 @@ void VideoDenoisingME::videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOu
 	patchWindowSize = S * 2 + 1;
 	int width = framesSrc[0].cols;
 	int height = framesSrc[0].rows;
+	int border = S + 2;
+
 	vector<DImage>vxFlow;                  //vector DImage keeps newest 2H optical flow data for x dir
 	vector<DImage>vyFlow;                  //vector DImage keeps newest 2H optical flow data for y dir
 
@@ -138,26 +156,46 @@ void VideoDenoisingME::videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOu
 		CV_Error(CV_StsBadArg,
 		"src frames vector must be size of temporalWindowSize");
 
+	vector<cv::Mat> operateMat;
+	for (int n_frame = 0; n_frame < temporalWindowSize; n_frame++){
+		cv::Mat temp;
+		extentMat(framesSrc[n_frame], temp, border);
+		operateMat.push_back(temp);
+	}
 	
 
 	//calculate  2H optical flow data
 	for (int n_frame = 0; n_frame < temporalWindowSize; n_frame++){
 		if (n_frame>0){
 			DImage pre, cur, warp, vx, vy;
-			mat2DImage(framesSrc[n_frame - 1], pre);
-			mat2DImage(framesSrc[n_frame], cur);
+			mat2DImage(operateMat[n_frame - 1], pre);
+			mat2DImage(operateMat[n_frame], cur);
 			OpticalFlow::Coarse2FineFlow(vx, vy, warp, pre, cur, alpha, ratio, minWidth, nOuterFPIterations, nInnerFPIterations, nCGIterations);
 			vxFlow.push_back(vx);
 			vyFlow.push_back(vy);
 		}
 	}
 	//handle the  2H+1 frames
-	
-	videoDenoising(framesSrc, framesOut, vxFlow, vyFlow, _K, temporalWindowSize, patchWindowSize);
+	cv::Mat resultTemp;
+	videoDenoising(operateMat, resultTemp, vxFlow, vyFlow, _K, temporalWindowSize, patchWindowSize);
+	centerMat(resultTemp, framesOut, border);
 		
 
 	
 }
 
+void VideoDenoisingME::extentMat(cv::Mat src, cv::Mat &dst, int extentEdge){
+	/*if(dst.empty())dst.create(src.rows+2*extentEdge,src.cols+2*extentEdge,src.type());
+	else dst.resize(src.rows + 2 * extentEdge, src.cols + 2 * extentEdge);*/
+	cv::copyMakeBorder(src, dst, extentEdge, extentEdge, extentEdge, extentEdge, cv::BORDER_REFLECT_101, cv::Scalar::all(0));
+}
+
+void VideoDenoisingME::centerMat(cv::Mat src, cv::Mat &dst, int extentEdge){
+	if (dst.empty())dst.create(src.rows - 2* extentEdge, src.cols -2* extentEdge, src.type());
+	else dst.resize(src.rows - 2 * extentEdge, src.cols - 2 * extentEdge);
+
+	cv::Rect center(extentEdge, extentEdge, dst.cols, dst.rows);
+	src(center).copyTo(dst);
+}
 
 

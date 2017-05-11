@@ -46,6 +46,7 @@ int main(){
 
 
 	while(1){
+	//for (int i = 0; i < 13;i++){
 		cv::Mat frame;
 		capture >> frame;
 		if (frame.empty())break;
@@ -56,6 +57,8 @@ int main(){
 	
 	vector<cv::Mat> vResult;
 	VideoDenoisingME ::processing(test, vResult, 11, 11, 7);
+
+
 	for (int i = 0; i < vResult.size(); i++){
 		writer .write( vResult[i]);
 	}

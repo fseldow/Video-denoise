@@ -81,5 +81,8 @@ private:
 			}
 		}
 	}
+
+	static void extentMat(cv::Mat src, cv::Mat &dst, int extentEdge);
+	static void centerMat(cv::Mat src, cv::Mat &dst, int extentEdge);
 };
 
