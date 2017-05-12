@@ -7,21 +7,21 @@
 using namespace std;
 
 template <class T>
-class Vector
+class Vector_OF
 {
 protected:
 	int nDim;
 	T* pData;
 public:
-	Vector(void);
-	Vector(int ndim,const T *data=NULL);
-	Vector(const Vector<T>& vect);
-	~Vector(void);
+	Vector_OF(void);
+	Vector_OF(int ndim,const T *data=NULL);
+	Vector_OF(const Vector_OF<T>& vect);
+	~Vector_OF(void);
 	void releaseData();
 	void allocate(int ndim);
-	void allocate(const Vector<T>& vect){allocate(vect.nDim);};
-	void copyData(const Vector<T>& vect);
-	void dimcheck(const Vector<T>& vect) const;
+	void allocate(const Vector_OF<T>& vect){allocate(vect.nDim);};
+	void copyData(const Vector_OF<T>& vect);
+	void dimcheck(const Vector_OF<T>& vect) const;
 	void reset();
 	double norm2() const;
 
@@ -34,12 +34,12 @@ public:
 	T* data() {return pData;};
 	int dim() const {return nDim;};
 	inline bool matchDimension(int _ndim) const {if(nDim==_ndim) return true;else return false;};
-	inline bool matchDimension(const Vector<T>& vect) const {return matchDimension(vect.nDim);};
+	inline bool matchDimension(const Vector_OF<T>& vect) const {return matchDimension(vect.nDim);};
 
 	// operators
 	inline T operator[](int index) const {return pData[index];};
 	inline T& operator[](int index){return *(pData+index);};
-	Vector<T>& operator=(const Vector<T>& vect);
+	Vector_OF<T>& operator=(const Vector_OF<T>& vect);
 
 	//const Vector<T>& operator/(double val) const
 	//{
@@ -49,27 +49,27 @@ public:
 	//	return result;
 	//}
 	
-	Vector<T>& operator+=(const Vector<T>& vect);
-	Vector<T>& operator*=(const Vector<T>& vect);
-	Vector<T>& operator-=(const Vector<T>& vect);
-	Vector<T>& operator/=(const Vector<T>& vect);
+	Vector_OF<T>& operator+=(const Vector_OF<T>& vect);
+	Vector_OF<T>& operator*=(const Vector_OF<T>& vect);
+	Vector_OF<T>& operator-=(const Vector_OF<T>& vect);
+	Vector_OF<T>& operator/=(const Vector_OF<T>& vect);
 
-	Vector<T>& operator+=(double val);
-	Vector<T>& operator*=(double val);
-	Vector<T>& operator-=(double val);
-	Vector<T>& operator/=(double val);
+	Vector_OF<T>& operator+=(double val);
+	Vector_OF<T>& operator*=(double val);
+	Vector_OF<T>& operator-=(double val);
+	Vector_OF<T>& operator/=(double val);
 	
-	//friend const Vector<T> operator+(const Vector<T>& vect1,const Vector<T>& vect2);
-	//friend const Vector<T> operator*(const Vector<T>& vect1,const Vector<T>& vect2);
-	//friend const Vector<T> operator-(const Vector<T>& vect1,const Vector<T>& vect2);
-	//friend const Vector<T> operator/(const Vector<T>& vect1,const Vector<T>& vect2);
+	//friend const Vector_OF<T> operator+(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2);
+	//friend const Vector_OF<T> operator*(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2);
+	//friend const Vector_OF<T> operator-(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2);
+	//friend const Vector_OF<T> operator/(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2);
 
-	//friend const Vector<T> operator+(const Vector<T>& vect1,double val);
-	//friend const Vector<T> operator*(const Vector<T>& vect1,double val);
-	//friend const Vector<T> operator-(const Vector<T>& vect1,double val);
-	//friend Vector<T> operator/(const Vector<T>& vect,double val);
+	//friend const Vector_OF<T> operator+(const Vector_OF<T>& vect1,double val);
+	//friend const Vector_OF<T> operator*(const Vector_OF<T>& vect1,double val);
+	//friend const Vector_OF<T> operator-(const Vector_OF<T>& vect1,double val);
+	//friend Vector_OF<T> operator/(const Vector_OF<T>& vect,double val);
 	
-	friend double innerproduct(const Vector<T>& vect1,const Vector<T>& vect2)
+	friend double innerproduct(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2)
 	{
 		double result = 0;
 		for(int i = 0;i<vect1.dim();i++)
@@ -77,9 +77,9 @@ public:
 		return result;
 	}
 	
-	void concatenate(const vector< Vector<T> >& vect);
+	void concatenate(const vector< Vector_OF<T> >& vect);
 
-	//friend const Vector<T> concatenate(const vector<Vector<T>>& vect){Vector<T> result; result.concatenate(vect); return result;};
+	//friend const Vector_OF<T> concatenate(const vector<Vector_OF<T>>& vect){Vector_OF<T> result; result.concatenate(vect); return result;};
 	bool write(ofstream& myfile)
 	{
 		myfile.write((char *)&nDim,sizeof(int));
@@ -118,14 +118,14 @@ public:
 //}
 
 template <class T>
-Vector<T>::Vector(void)
+Vector_OF<T>::Vector_OF(void)
 {
 	nDim=0;
 	pData=NULL;
 }
 
 template <class T>
-Vector<T>::Vector(int ndim, const T *data)
+Vector_OF<T>::Vector_OF(int ndim, const T *data)
 {
 	nDim=ndim;
 	pData=new T[nDim];
@@ -136,7 +136,7 @@ Vector<T>::Vector(int ndim, const T *data)
 }
 
 template <class T>
-Vector<T>::Vector(const Vector& vect)
+Vector_OF<T>::Vector_OF(const Vector_OF& vect)
 {
 	nDim=0;
 	pData=NULL;
@@ -144,13 +144,13 @@ Vector<T>::Vector(const Vector& vect)
 }
 
 template <class T>
-Vector<T>::~Vector(void)
+Vector_OF<T>::~Vector_OF(void)
 {
 	releaseData();
 }
 
 template <class T>
-void Vector<T>::releaseData()
+void Vector_OF<T>::releaseData()
 {
 	if(pData!=NULL)
 		delete pData;
@@ -159,7 +159,7 @@ void Vector<T>::releaseData()
 }
 
 template <class T>
-void Vector<T>::allocate(int ndim)
+void Vector_OF<T>::allocate(int ndim)
 {
 	releaseData();
 	nDim=ndim;
@@ -172,7 +172,7 @@ void Vector<T>::allocate(int ndim)
 
 
 template <class T>
-void Vector<T>::copyData(const Vector &vect)
+void Vector_OF<T>::copyData(const Vector_OF &vect)
 {
 	if(nDim!=vect.nDim)
 	{
@@ -184,14 +184,14 @@ void Vector<T>::copyData(const Vector &vect)
 }
 
 template <class T>
-void Vector<T>::dimcheck(const Vector &vect) const
+void Vector_OF<T>::dimcheck(const Vector_OF &vect) const
 {
 	if(nDim!=vect.nDim)
 		cout<<"The dimensions of the vectors don't match!"<<endl;
 }
 
 template <class T>
-void Vector<T>::reset()
+void Vector_OF<T>::reset()
 {
 	if(pData!=NULL)
 		memset(pData,0,sizeof(T)*nDim);
@@ -199,7 +199,7 @@ void Vector<T>::reset()
 
 
 template <class T>
-T Vector<T>::sum() const
+T Vector_OF<T>::sum() const
 {
 	T total = 0;
 	for(int i=0;i<nDim;i++)
@@ -208,7 +208,7 @@ T Vector<T>::sum() const
 }
 
 template <class T>
-double Vector<T>::norm2() const
+double Vector_OF<T>::norm2() const
 {
 	double temp=0;
 	for(int i=0;i<nDim;i++)
@@ -217,7 +217,7 @@ double Vector<T>::norm2() const
 }
 
 template <class T>
-void Vector<T>::printVector()
+void Vector_OF<T>::printVector()
 {
 	for(int i=0;i<nDim;i++)
 		cout<<pData[i]<<' ';
@@ -229,14 +229,14 @@ void Vector<T>::printVector()
 // operators
 //----------------------------------------------------------------------------------
 template <class T>
-Vector<T>& Vector<T>::operator =(const Vector<T> &vect)
+Vector_OF<T>& Vector_OF<T>::operator =(const Vector_OF<T> &vect)
 {
 	copyData(vect);
 	return *this;
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator +=(const Vector<T> &vect)
+Vector_OF<T>& Vector_OF<T>::operator +=(const Vector_OF<T> &vect)
 {
 	dimcheck(vect);
 	for(int i=0;i<nDim;i++)
@@ -245,7 +245,7 @@ Vector<T>& Vector<T>::operator +=(const Vector<T> &vect)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator *=(const Vector<T> &vect)
+Vector_OF<T>& Vector_OF<T>::operator *=(const Vector_OF<T> &vect)
 {
 	dimcheck(vect);
 	for(int i=0;i<nDim;i++)
@@ -254,7 +254,7 @@ Vector<T>& Vector<T>::operator *=(const Vector<T> &vect)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator -=(const Vector<T> &vect)
+Vector_OF<T>& Vector_OF<T>::operator -=(const Vector_OF<T> &vect)
 {
 	dimcheck(vect);
 	for(int i=0;i<nDim;i++)
@@ -263,7 +263,7 @@ Vector<T>& Vector<T>::operator -=(const Vector<T> &vect)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator /=(const Vector<T> &vect)
+Vector_OF<T>& Vector_OF<T>::operator /=(const Vector_OF<T> &vect)
 {
 	dimcheck(vect);
 	for(int i=0;i<nDim;i++)
@@ -272,7 +272,7 @@ Vector<T>& Vector<T>::operator /=(const Vector<T> &vect)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator +=(double val)
+Vector_OF<T>& Vector_OF<T>::operator +=(double val)
 {
 	for(int i=0;i<nDim;i++)
 		pData[i]+=val;
@@ -280,7 +280,7 @@ Vector<T>& Vector<T>::operator +=(double val)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator *=(double val)
+Vector_OF<T>& Vector_OF<T>::operator *=(double val)
 {
 	for(int i=0;i<nDim;i++)
 		pData[i]*=val;
@@ -288,7 +288,7 @@ Vector<T>& Vector<T>::operator *=(double val)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator -=(double val)
+Vector_OF<T>& Vector_OF<T>::operator -=(double val)
 {
 	for(int i=0;i<nDim;i++)
 		pData[i]-=val;
@@ -296,7 +296,7 @@ Vector<T>& Vector<T>::operator -=(double val)
 }
 
 template <class T>
-Vector<T>& Vector<T>::operator /=(double val)
+Vector_OF<T>& Vector_OF<T>::operator /=(double val)
 {
 	for(int i=0;i<nDim;i++)
 		pData[i]/=val;
@@ -305,76 +305,76 @@ Vector<T>& Vector<T>::operator /=(double val)
 
 
 template<class T>
-const Vector<T> operator+(const Vector<T>& vect1,const Vector<T>& vect2)
+const Vector_OF<T> operator+(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2)
 {
 	vect1.dimcheck(vect2);
-	Vector<T> result(vect1);
+	Vector_OF<T> result(vect1);
 	result+=vect2;
 	return result;
 }
 
 template<class T>
-const Vector<T> operator-(const Vector<T>& vect1,const Vector<T>& vect2)
+const Vector_OF<T> operator-(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2)
 {
 	vect1.dimcheck(vect2);
-	Vector<T> result(vect1);
+	Vector_OF<T> result(vect1);
 	result-=vect2;
 	return result;
 }
 
 template<class T>
-const Vector<T> operator*(const Vector<T>& vect1,const Vector<T>& vect2)
+const Vector_OF<T> operator*(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2)
 {
 	vect1.dimcheck(vect2);
-	Vector<T> result(vect1);
+	Vector_OF<T> result(vect1);
 	result*=vect2;
 	return result;
 }
 
 template<class T>
-const Vector<T> operator/(const Vector<T>& vect1,const Vector<T>& vect2)
+const Vector_OF<T> operator/(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2)
 {
 	vect1.dimcheck(vect2);
-	Vector<T> result(vect1);
+	Vector_OF<T> result(vect1);
 	result/=vect2;
 	return result;
 }
 
 template <class T>
-Vector<T> operator+(const Vector<T>& vect,double val)
+Vector_OF<T> operator+(const Vector_OF<T>& vect,double val)
 {
-	Vector<T> result(vect);
+	Vector_OF<T> result(vect);
 	result+=val;
 	return result;
 }
 
 template <class T>
-Vector<T> operator-(const Vector<T>& vect,double val)
+Vector_OF<T> operator-(const Vector_OF<T>& vect,double val)
 {
-	Vector<T> result(vect);
+	Vector_OF<T> result(vect);
 	result-=val;
 	return result;
 }
 
 template <class T>
-Vector<T> operator*(const Vector<T>& vect,double val)
+Vector_OF<T> operator*(const Vector_OF<T>& vect,double val)
 {
-	Vector<T> result(vect);
+	Vector_OF<T> result(vect);
 	result*=val;
 	return result;
 }
 
 template <class T>
-Vector<T> operator/(const Vector<T>& vect,double val)
+Vector_OF<T> operator/(const Vector_OF<T>& vect,double val)
 {
-	Vector<T> result(vect);
+	Vector_OF<T> result(vect);
 	result/=val;
 	return result;
 }
 
 
 template <class T>
-double innerproduct(const Vector<T>& vect1,const Vector<T>& vect2)
+double innerproduct(const Vector_OF<T>& vect1,const Vector_OF<T>& vect2)
 {
 	vect1.dimcheck(vect2);
 	double result=0;
@@ -384,7 +384,7 @@ double innerproduct(const Vector<T>& vect1,const Vector<T>& vect2)
 }
 
 template <class T>
-void Vector<T>::concatenate(const vector< Vector<T> >& vect)
+void Vector_OF<T>::concatenate(const vector< Vector_OF<T> >& vect)
 {
 	releaseData();
 	nDim = 0;
@@ -402,7 +402,7 @@ void Vector<T>::concatenate(const vector< Vector<T> >& vect)
 
 #ifdef _QT
 
-bool Vector::writeVector(QFile& file) const
+bool Vector_OF::writeVector(QFile& file) const
 {
 	file.write((char *)&nDim,sizeof(int));
 	if(file.write((char *)pData,sizeof(double)*nDim)!=sizeof(double)*nDim)
@@ -410,7 +410,7 @@ bool Vector::writeVector(QFile& file) const
 	return true;
 }
 
-bool Vector::readVector(QFile &file)
+bool Vector_OF::readVector(QFile &file)
 {
 	releaseData();
 	file.read((char *)&nDim,sizeof(int));

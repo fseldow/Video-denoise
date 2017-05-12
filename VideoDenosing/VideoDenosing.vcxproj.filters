@@ -60,6 +60,9 @@
     <ClInclude Include="NLM.hpp">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="mex\Vector.h">
+      <Filter>头文件\OpticalFlow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="testMain.cpp">

@@ -6,6 +6,12 @@ VideoDenoisingME::VideoDenoisingME(){
 
 int VideoDenoisingME::processing(vector<cv::Mat>srcFrames, vector<cv::Mat>&dstFrames, int K, int temporalWindowSize, int patchWindowSize)
 {
+	if (srcFrames.size() < temporalWindowSize){
+		CV_Error(CV_StsBadArg,
+			"temporalWindowSize should not larger than srcFrames");
+	}
+	dstFrames.clear();
+
 	int H = temporalWindowSize / 2;
 	temporalWindowSize = H * 2 + 1;
 	int S = patchWindowSize / 2;
@@ -187,7 +193,7 @@ void VideoDenoisingME::videoDenoising(vector<cv::Mat>framesSrc, cv::Mat&framesOu
 void VideoDenoisingME::extentMat(cv::Mat src, cv::Mat &dst, int extentEdge){
 	/*if(dst.empty())dst.create(src.rows+2*extentEdge,src.cols+2*extentEdge,src.type());
 	else dst.resize(src.rows + 2 * extentEdge, src.cols + 2 * extentEdge);*/
-	cv::copyMakeBorder(src, dst, extentEdge, extentEdge, extentEdge, extentEdge, cv::BORDER_REFLECT_101, cv::Scalar::all(0));
+	cv::copyMakeBorder(src, dst, extentEdge, extentEdge, extentEdge, extentEdge, cv::BORDER_REFLECT_101);
 }
 
 void VideoDenoisingME::centerMat(cv::Mat src, cv::Mat &dst, int extentEdge){

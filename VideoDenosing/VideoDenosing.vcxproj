@@ -91,6 +91,7 @@
     <ClInclude Include="mex\OpticalFlow.h" />
     <ClInclude Include="mex\project.h" />
     <ClInclude Include="mex\Stochastic.h" />
+    <ClInclude Include="mex\Vector.h" />
     <ClInclude Include="NLM.hpp" />
     <ClInclude Include="nlmeans_denoising_commons.hpp" />
     <ClInclude Include="VideoDenoisingME.h" />

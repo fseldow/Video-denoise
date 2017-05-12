@@ -5,7 +5,7 @@
 #include <time.h>
 
 using namespace std;
-//using namespace cv;
+using namespace cv;
 
 
 
@@ -37,7 +37,7 @@ void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
 int main(){
 	double start = GetTickCount();
 	vector<cv::Mat> test;
-	cv::Mat result;
+	Mat result;
 	cv::VideoCapture capture("E:\\source.avi");
 
 	double fps = capture.get(CV_CAP_PROP_FPS);

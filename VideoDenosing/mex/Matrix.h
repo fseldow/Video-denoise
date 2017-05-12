@@ -48,17 +48,17 @@ public:
 	bool matchDimension(const Matrix<T>& matrix) const {return matchDimension(matrix.nrow(),matrix.ncol());};
 
 	// functions to check dimensions
-	bool checkDimRight(const Vector<T>& vector) const;
+	bool checkDimRight(const Vector_OF<T>& vector) const;
 	bool checkDimRight(const Matrix<T>& matrix) const;
-	bool checkDimLeft(const Vector<T>& vector) const;
+	bool checkDimLeft(const Vector_OF<T>& vector) const;
 	bool checkDimLeft(const Matrix<T>& matrix) const;
 
 	// functions for matrix computation
-	void Multiply(Vector<T>& result,const Vector<T>& vect) const;
+	void Multiply(Vector_OF<T>& result,const Vector_OF<T>& vect) const;
 	void Multiply(Matrix<T>& result,const Matrix<T>& matrix) const;
 
 	void transpose(Matrix& result) const;
-	void fromVector(const Vector<T>& vect);
+	void fromVector(const Vector_OF<T>& vect);
 	double norm2() const;
 	double sum() const
 	{
@@ -80,13 +80,13 @@ public:
 	Matrix& operator*=(const Matrix<T>& matrix);
 	Matrix& operator/=(const Matrix<T>& matrix);
 
-	friend Vector<T> operator*(const Matrix<T>& matrix,const Vector<T>& vect);
+	friend Vector_OF<T> operator*(const Matrix<T>& matrix,const Vector_OF<T>& vect);
 	friend Matrix<T> operator*(const Matrix<T>& matrix1,const Matrix<T>& matrix2);
 
 	
 	// solve linear systems
-	void SolveLinearSystem(Vector<T>& result,const Vector<T>& b) const;
-	void ConjugateGradient(Vector<T>& result,const Vector<T>& b) const;
+	void SolveLinearSystem(Vector_OF<T>& result,const Vector_OF<T>& b) const;
+	void ConjugateGradient(Vector_OF<T>& result,const Vector_OF<T>& b) const;
 	
 #ifdef _QT
 	bool writeMatrix(QFile& file) const;
@@ -229,7 +229,7 @@ void Matrix<T>::identity(int ndim)
 // functions to check dimensionalities
 //--------------------------------------------------------------------------------------------------
 template<class T>
-bool Matrix<T>::checkDimRight(const Vector<T>& vect) const
+bool Matrix<T>::checkDimRight(const Vector_OF<T>& vect) const
 {
 	if(nCol==vect.dim())
 		return true;
@@ -253,7 +253,7 @@ bool Matrix<T>::checkDimRight(const Matrix<T> &matrix) const
 }
 
 template<class T>
-bool Matrix<T>::checkDimLeft(const Vector<T>& vect) const
+bool Matrix<T>::checkDimLeft(const Vector_OF<T>& vect) const
 {
 	if(nRow==vect.dim())
 		return true;
@@ -280,7 +280,7 @@ bool Matrix<T>::checkDimLeft(const Matrix<T> &matrix) const
 // functions for numerical computation
 //--------------------------------------------------------------------------------------------------
 template<class T>
-void Matrix<T>::Multiply(Vector<T> &result, const Vector<T>&vect) const
+void Matrix<T>::Multiply(Vector_OF<T> &result, const Vector_OF<T>&vect) const
 {
 	checkDimRight(vect);
 	if(result.dim()!=nRow)
@@ -321,7 +321,7 @@ void Matrix<T>::transpose(Matrix<T> &result) const
 }
 
 template<class T>
-void Matrix<T>::fromVector(const Vector<T>&vect)
+void Matrix<T>::fromVector(const Vector_OF<T>&vect)
 {
 	if(!matchDimension(vect.dim(),1))
 		allocate(vect.dim(),1);
@@ -418,9 +418,9 @@ Matrix<T>& Matrix<T>::operator /=(const Matrix<T> &matrix)
 }
 
 template<class T>
-Vector<T> operator*(const Matrix<T>& matrix,const Vector<T>& vect)
+Vector_OF<T> operator*(const Matrix<T>& matrix,const Vector_OF<T>& vect)
 {
-	Vector<T> result;
+	Vector_OF<T> result;
 	matrix.Multiply(result,vect);
 	return result;
 }
@@ -437,7 +437,7 @@ Matrix<T> operator*(const Matrix<T>& matrix1,const Matrix<T>& matrix2)
 // function for conjugate gradient method
 //--------------------------------------------------------------------------------------------------
 template<class T>
-void Matrix<T>::ConjugateGradient(Vector<T> &result, const Vector<T>&b) const
+void Matrix<T>::ConjugateGradient(Vector_OF<T> &result, const Vector_OF<T>&b) const
 {
 	if(nCol!=nRow)
 	{
@@ -448,11 +448,11 @@ void Matrix<T>::ConjugateGradient(Vector<T> &result, const Vector<T>&b) const
 	if(!result.matchDimension(b))
 		result.allocate(b);
 
-	Vector<T> r(b),p,q;
+	Vector_OF<T> r(b),p,q;
 	result.reset();
 
 	int nIterations=nRow*5;
-	Vector<T> rou(nIterations);
+	Vector_OF<T> rou(nIterations);
 	for(int k=0;k<nIterations;k++)
 	{
 		rou[k]=r.norm2();
@@ -476,7 +476,7 @@ void Matrix<T>::ConjugateGradient(Vector<T> &result, const Vector<T>&b) const
 }
 
 template<class T>
-void Matrix<T>::SolveLinearSystem(Vector<T> &result, const Vector<T>&b) const
+void Matrix<T>::SolveLinearSystem(Vector_OF<T> &result, const Vector_OF<T>&b) const
 {
 	if(nCol==nRow)
 	{
@@ -491,7 +491,7 @@ void Matrix<T>::SolveLinearSystem(Vector<T> &result, const Vector<T>&b) const
 	Matrix<T> AT,ATA;
 	transpose(AT);
 	AT.Multiply(ATA,*this);
-	Vector<T> ATb;
+	Vector_OF<T> ATb;
 	AT.Multiply(ATb,b);
 	ATA.ConjugateGradient(result,ATb);
 }

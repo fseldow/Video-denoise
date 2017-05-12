@@ -325,7 +325,7 @@ public:
 	// get the histogram of an image region
 	// the range is [0,imWidth] (x) and [0,imHeight] (y)
 	template <class T1>
-	Vector<T1> histogramRegion(int nBins,double left,double top,double right,double bottom) const;
+	Vector_OF<T1> histogramRegion(int nBins,double left,double top,double right,double bottom) const;
 
 
 	// function for bicubic image interpolation
@@ -2169,9 +2169,9 @@ void Image<T>::ConvertToVisualWords(Image<T1> &result, const T2 *pDictionary, in
 // notice that the range of the coordinate is [0,imWidth] (x) and [0,imHeight] (y)
 template <class T>
 template <class T1>
-Vector<T1> Image<T>::histogramRegion(int nBins,double left,double top,double right,double bottom) const
+Vector_OF<T1> Image<T>::histogramRegion(int nBins,double left,double top,double right,double bottom) const
 {
-	Vector<T1> histogram(nBins);
+	Vector_OF<T1> histogram(nBins);
 	int Left = left,Top = top,Right = right,Bottom = bottom;
 	double dLeft,dTop,dRight,dBottom;
 	dLeft = 1-(left-Left);

@@ -17,7 +17,7 @@ using namespace std;
 OpticalFlow::InterpolationMethod OpticalFlow::interpolation = OpticalFlow::Bilinear;
 OpticalFlow::NoiseModel OpticalFlow::noiseModel = OpticalFlow::Lap;
 GaussianMixture OpticalFlow::GMPara;
-Vector<double> OpticalFlow::LapPara;
+Vector_OF<double> OpticalFlow::LapPara;
 
 
 OpticalFlow::OpticalFlow(void)
@@ -819,7 +819,7 @@ void OpticalFlow::estGaussianMixture(const DImage& Im1,const DImage& Im2,Gaussia
 	}
 }
 
-void OpticalFlow::estLaplacianNoise(const DImage& Im1,const DImage& Im2,Vector<double>& para)
+void OpticalFlow::estLaplacianNoise(const DImage& Im1,const DImage& Im2,Vector_OF<double>& para)
 {
 	int nChannels = Im1.nchannels();
 	if(para.dim()!=nChannels)
@@ -827,7 +827,7 @@ void OpticalFlow::estLaplacianNoise(const DImage& Im1,const DImage& Im2,Vector<d
 	else
 		para.reset();
 	double temp;
-	Vector<double> total(nChannels);
+	Vector_OF<double> total(nChannels);
 	for(int k = 0;k<nChannels;k++)
 		total[k] = 0;
 

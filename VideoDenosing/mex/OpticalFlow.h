@@ -18,7 +18,7 @@ public:
 	OpticalFlow(void);
 	~OpticalFlow(void);
 	static GaussianMixture GMPara;
-	static Vector<double> LapPara;
+	static Vector_OF<double> LapPara;
 	static NoiseModel noiseModel;
 public:
 	static void getDxs(DImage& imdx,DImage& imdy,DImage& imdt,const DImage& im1,const DImage& im2);
@@ -37,7 +37,7 @@ public:
 														 double alpha,int nOuterFPIterations,int nInnerFPIterations,int nSORIterations);
 
 	static void estGaussianMixture(const DImage& Im1,const DImage& Im2,GaussianMixture& para,double prior = 0.9);
-	static void estLaplacianNoise(const DImage& Im1,const DImage& Im2,Vector<double>& para);
+	static void estLaplacianNoise(const DImage& Im1,const DImage& Im2,Vector_OF<double>& para);
 	static void Laplacian(DImage& output,const DImage& input,const DImage& weight);
 	static void testLaplacian(int dim=3);
 
