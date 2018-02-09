@@ -35,10 +35,12 @@ void mat2DImage(cv::Mat srcMat, DImage &dstDImage){
 }
 
 int main(){
+	
+
 	double start = GetTickCount();
 	vector<cv::Mat> test;
 	Mat result;
-	cv::VideoCapture capture("E:\\source.avi");
+	cv::VideoCapture capture("E:\\C++\\out.avi");
 
 	double fps = capture.get(CV_CAP_PROP_FPS);
 	cv::Size size(capture.get(CV_CAP_PROP_FRAME_WIDTH), capture.get(CV_CAP_PROP_FRAME_HEIGHT));
